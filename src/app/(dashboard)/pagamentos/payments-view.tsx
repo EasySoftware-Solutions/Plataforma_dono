@@ -18,7 +18,7 @@ const BANK_KEY = "dono:conta";
 
 const fieldCls =
   "h-11 w-full rounded-xl bg-white/[0.06] px-3.5 text-sm text-ink outline-none ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-crp-blue-bright aria-[invalid=true]:ring-negative";
-const selectCls = "h-9 rounded-pill bg-white/[0.06] px-4 text-sm font-semibold text-ink-muted outline-none hover:bg-white/10";
+const selectCls = "h-11 w-full rounded-xl bg-white/[0.06] px-4 text-sm font-semibold text-ink-muted outline-none hover:bg-white/10 sm:h-9 sm:w-auto sm:rounded-pill";
 
 function BankPanel({ inicial }: { inicial: BankAccount }) {
   const [conta, setConta] = useState(inicial);
@@ -197,19 +197,19 @@ export function PaymentsView({ assets, payments, bank }: { assets: Asset[]; paym
   return (
     <div className="space-y-4">
       <dl className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <div className="rounded-card bg-crp-surface p-5">
+        <div className="card-elev rounded-card p-5">
           <dt className="text-sm text-ink-subtle">Recebido em {anoAtual}</dt>
           <dd className="num mt-1.5 text-xl font-bold text-ink sm:text-2xl">{brl(recebidoAno)}</dd>
         </div>
-        <div className="rounded-card bg-crp-surface p-5">
+        <div className="card-elev rounded-card p-5">
           <dt className="text-sm text-ink-subtle">Último repasse · {ultimaData ? data(ultimaData) : "—"}</dt>
           <dd className="num mt-1.5 text-xl font-bold text-ink sm:text-2xl">{brl(ultimoTotal)}</dd>
         </div>
-        <div className="rounded-card bg-crp-blue p-5 text-ink">
+        <div className="rounded-card bg-gradient-to-br from-crp-blue to-crp-blue/80 p-5 text-ink shadow-lg shadow-crp-blue/25">
           <dt className="text-sm font-semibold">Próximo previsto · {proxData ? data(proxData) : "—"}</dt>
           <dd className="num mt-1.5 text-xl font-bold sm:text-2xl">{brl(proxTotal)}</dd>
         </div>
-        <div className="rounded-card bg-crp-surface p-5">
+        <div className="card-elev rounded-card p-5">
           <dt className="text-sm text-ink-subtle">Atrasados</dt>
           <dd className={`num mt-1.5 text-xl font-bold sm:text-2xl ${atrasados.length ? "text-negative" : "text-ink"}`}>
             {atrasados.length ? brl(atrasados.reduce((s, p) => s + p.valor, 0)) : "Nenhum"}
@@ -219,7 +219,7 @@ export function PaymentsView({ assets, payments, bank }: { assets: Asset[]; paym
       </dl>
 
       <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
-        <section className="min-w-0 rounded-card bg-crp-surface">
+        <section className="card-elev min-w-0 rounded-card">
           <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5 sm:px-6 sm:pt-6">
             <Segmented
               label="Visualização"
@@ -277,18 +277,18 @@ export function PaymentsView({ assets, payments, bank }: { assets: Asset[]; paym
                 <EmptyState title="Nenhum pagamento com esses filtros">Amplie o período ou escolha outro ativo.</EmptyState>
               ) : (
                 <>
-                  <div className="mt-4 overflow-x-auto">
+                  <div className="mt-4 hidden overflow-x-auto md:block">
                     <table className="w-full min-w-[680px] text-sm">
-                      <caption className="sr-only">Extrato de pagamentos</caption>
-                      <thead className="text-ink-subtle">
-                        <tr className="border-y border-white/[0.06]">
-                          <th scope="col" className="px-5 py-3 text-left font-semibold sm:px-6">Data</th>
-                          <th scope="col" className="px-3 py-3 text-left font-semibold">Ativo</th>
-                          <th scope="col" className="px-3 py-3 text-left font-semibold">Referência</th>
-                          <th scope="col" className="px-3 py-3 text-left font-semibold">Status</th>
-                          <th scope="col" className="px-5 py-3 text-right font-semibold sm:px-6">Valor</th>
-                        </tr>
-                      </thead>
+                    <caption className="sr-only">Extrato de pagamentos</caption>
+                    <thead className="text-ink-subtle">
+                      <tr className="border-y border-white/[0.07] bg-white/[0.02]">
+                        <th scope="col" className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-[0.08em] sm:px-6">Data</th>
+                        <th scope="col" className="px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-[0.08em]">Ativo</th>
+                        <th scope="col" className="px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-[0.08em]">Referência</th>
+                        <th scope="col" className="px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-[0.08em]">Status</th>
+                        <th scope="col" className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-[0.08em] sm:px-6">Valor</th>
+                      </tr>
+                    </thead>
                       <tbody>
                         {visiveis.map((p) => (
                           <tr key={p.id} className="border-b border-white/[0.05] hover:bg-white/[0.02]">
@@ -307,6 +307,20 @@ export function PaymentsView({ assets, payments, bank }: { assets: Asset[]; paym
                       </tbody>
                     </table>
                   </div>
+                  <ul className="divide-y divide-white/[0.06] md:hidden">
+                    {visiveis.map((p) => (
+                      <li key={p.id} className="flex items-start justify-between gap-3 px-5 py-3.5 sm:px-6">
+                        <span className="min-w-0">
+                          <span className="block truncate text-[15px] font-semibold text-ink">{asset(p.assetId).nome}</span>
+                          <span className="mt-0.5 block text-sm text-ink-muted">
+                            {data(p.data)} · ref. {mesNome(p.competencia)}/{p.competencia.slice(2, 4)}
+                          </span>
+                          <span className="mt-1.5 block"><PaymentStatusBadge status={p.status} /></span>
+                        </span>
+                        <span className="num shrink-0 text-[15px] font-bold text-ink">{brl(p.valor)}</span>
+                      </li>
+                    ))}
+                  </ul>
                   <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 text-sm sm:px-6">
                     <p className="text-ink-subtle">
                       {filtrados.length} lançamentos · total <span className="num font-semibold text-ink">{brl(totalFiltrado)}</span>

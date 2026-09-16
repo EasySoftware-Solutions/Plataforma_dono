@@ -2,14 +2,14 @@ import { AlertTriangle, CheckCircle2, Clock, HardHat, Loader, Wrench, Zap } from
 import type { AssetStatus, PaymentStatus } from "@/types";
 import { STATUS_ATIVO, STATUS_PAGAMENTO } from "@/lib/constants";
 
-const chip = "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap";
+const chip = "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap ring-1 ring-inset";
 
 export function PaymentStatusBadge({ status, previsto }: { status: PaymentStatus; previsto?: boolean }) {
   const map = {
-    pago: { cls: "bg-positive/12 text-positive", Icon: CheckCircle2 },
-    processando: { cls: "bg-white/10 text-ink-muted", Icon: Loader },
-    pendente: { cls: "bg-white/[0.06] text-ink-subtle", Icon: Clock },
-    atrasado: { cls: "bg-negative/12 text-negative", Icon: AlertTriangle },
+    pago: { cls: "bg-positive/10 text-positive ring-positive/25", Icon: CheckCircle2 },
+    processando: { cls: "bg-white/[0.07] text-ink-muted ring-white/12", Icon: Loader },
+    pendente: { cls: "bg-white/[0.04] text-ink-subtle ring-white/10", Icon: Clock },
+    atrasado: { cls: "bg-negative/10 text-negative ring-negative/25", Icon: AlertTriangle },
   }[status];
   return (
     <span className={`${chip} ${map.cls}`}>
@@ -21,9 +21,9 @@ export function PaymentStatusBadge({ status, previsto }: { status: PaymentStatus
 
 export function AssetStatusBadge({ status }: { status: AssetStatus }) {
   const map = {
-    ativo: { cls: "bg-positive/12 text-positive", Icon: Zap },
-    implantacao: { cls: "bg-white/10 text-ink-muted", Icon: HardHat },
-    manutencao: { cls: "bg-negative/12 text-negative", Icon: Wrench },
+    ativo: { cls: "bg-positive/10 text-positive ring-positive/25", Icon: Zap },
+    implantacao: { cls: "bg-white/[0.07] text-ink-muted ring-white/12", Icon: HardHat },
+    manutencao: { cls: "bg-negative/10 text-negative ring-negative/25", Icon: Wrench },
   }[status];
   return (
     <span className={`${chip} ${map.cls}`}>

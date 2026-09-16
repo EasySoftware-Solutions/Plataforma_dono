@@ -70,12 +70,12 @@ export function Comparator({ assets, market }: { assets: Asset[]; market: Market
   return (
     <div className="space-y-4">
       {/* Destaque inicial: Quanto está rendendo por mês a Carteira DONO */}
-      <section className="relative overflow-hidden rounded-card border border-white/[0.08] bg-gradient-to-br from-[#131b4d] via-crp-surface to-[#0d1037] p-5 sm:p-7 shadow-lg">
+      <section className="relative overflow-hidden rounded-card border border-white/[0.07] bg-gradient-to-br from-[#15204a] via-crp-surface to-[#070d26] p-5 shadow-[0_20px_44px_-28px_rgba(2,6,22,0.95)] sm:p-7">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <span className="inline-flex size-2 rounded-full bg-positive animate-pulse" />
-              <span className="text-xs font-bold uppercase tracking-wider text-crp-blue-bright">
+              <span className="text-xs font-bold uppercase tracking-wider text-crp-gold">
                 Rendimento Mensal · Carteira DONO
               </span>
             </div>
@@ -93,7 +93,7 @@ export function Comparator({ assets, market }: { assets: Asset[]; market: Market
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:gap-3.5">
             <div className="rounded-xl bg-white/[0.04] p-3.5 ring-1 ring-inset ring-white/[0.08]">
-              <span className="block text-xs font-semibold text-ink-subtle">Yield médio mensal</span>
+              <span className="block text-xs font-semibold text-ink-subtle">Rentabilidade média mensal</span>
               <span className="num mt-1 block text-lg font-bold text-ink sm:text-xl">{pct(r.yieldMedio)}</span>
               <span className="num mt-0.5 block text-[11px] text-ink-subtle">ao mês (~{pct(metricasDono12.anualizado, { digits: 1 })} a.a.)</span>
             </div>
@@ -177,15 +177,15 @@ export function Comparator({ assets, market }: { assets: Asset[]; market: Market
           }
           bodyClassName="!px-0 sm:!px-0"
         >
-          <div className="overflow-x-auto">
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[640px] text-sm">
               <thead className="text-ink-subtle">
-                <tr className="border-b border-white/[0.06]">
-                  <th scope="col" className="px-5 py-3 text-left font-semibold sm:px-6">Série</th>
-                  <th scope="col" className="px-3 py-3 text-right font-semibold">Acumulado</th>
-                  <th scope="col" className="px-3 py-3 text-right font-semibold">Anualizado</th>
-                  <th scope="col" className="px-3 py-3 text-right font-semibold">Volatilidade</th>
-                  <th scope="col" className="px-5 py-3 text-right font-semibold sm:px-6">Meses negativos</th>
+                <tr className="border-b border-white/[0.07] bg-white/[0.02]">
+                  <th scope="col" className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-[0.08em] sm:px-6">Série</th>
+                  <th scope="col" className="px-3 py-3.5 text-right text-xs font-semibold uppercase tracking-[0.08em]">Acumulado</th>
+                  <th scope="col" className="px-3 py-3.5 text-right text-xs font-semibold uppercase tracking-[0.08em]">Anualizado</th>
+                  <th scope="col" className="px-3 py-3.5 text-right text-xs font-semibold uppercase tracking-[0.08em]">Volatilidade</th>
+                  <th scope="col" className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-[0.08em] sm:px-6">Meses negativos</th>
                 </tr>
               </thead>
               <tbody>
@@ -206,6 +206,33 @@ export function Comparator({ assets, market }: { assets: Asset[]; market: Market
               </tbody>
             </table>
           </div>
+          <ul className="divide-y divide-white/[0.06] px-5 md:hidden sm:px-6">
+            {tabela.map((t) => (
+              <li key={t.s} className="py-4 first:pt-2 last:pb-2">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="flex items-center gap-2.5 text-[15px] font-semibold text-ink">
+                    <span aria-hidden className="size-2.5 rounded-[3px]" style={{ background: SERIES[t.s].cor }} />
+                    {SERIES[t.s].nome}
+                  </span>
+                  <span className={`num text-lg font-bold ${t.acumulado < 0 ? "text-negative" : "text-ink"}`}>{pct(t.acumulado, { sign: true })}</span>
+                </div>
+                <dl className="mt-2.5 grid grid-cols-3 gap-2">
+                  <div>
+                    <dt className="text-xs text-ink-subtle">Anualizado</dt>
+                    <dd className="num mt-0.5 text-sm font-medium text-ink-muted">{pct(t.anualizado)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-ink-subtle">Volatilidade</dt>
+                    <dd className="num mt-0.5 text-sm font-medium text-ink-muted">{pct(t.desvio)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-ink-subtle">Meses negativos</dt>
+                    <dd className="num mt-0.5 text-sm font-medium text-ink-muted">{t.mesesNegativos}</dd>
+                  </div>
+                </dl>
+              </li>
+            ))}
+          </ul>
         </Panel>
 
         <Panel title="Simulação em reais">

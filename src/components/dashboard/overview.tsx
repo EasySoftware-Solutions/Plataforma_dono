@@ -14,7 +14,7 @@ export function PortfolioSummary({ assets, preview = false }: { assets: Asset[];
   const r = resumo(assets);
   return (
     <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-      <section className="min-w-0 rounded-card bg-crp-surface p-5 sm:p-7">
+      <section className="card-elev min-w-0 rounded-card p-5 sm:p-7">
         <h2 className="text-sm font-semibold text-ink-subtle">Patrimônio investido</h2>
         <p className="num mt-2 text-[40px] font-bold leading-none tracking-[-0.03em] text-ink sm:text-[52px]">{brl(r.patrimonio)}</p>
         <p className="mt-3 text-sm text-ink-subtle">
@@ -33,7 +33,7 @@ export function PortfolioSummary({ assets, preview = false }: { assets: Asset[];
             <dd className="num mt-1.5 text-xl font-bold text-ink">{brl(r.acumulado12)}</dd>
           </div>
           <div className="sm:pl-5">
-            <dt className="text-sm text-ink-subtle">Yield médio ao mês</dt>
+            <dt className="text-sm text-ink-subtle">Rentabilidade média ao mês</dt>
             <dd className="num mt-1.5 text-xl font-bold text-ink">{pct(r.yieldMedio)}</dd>
           </div>
         </dl>
@@ -50,6 +50,65 @@ export function IncomePanel({ assets, toggle = true, actions }: { assets: Asset[
   return (
     <Panel title="Rendimentos mensais" description={`${mesLongo(meses[0])} a ${mesLongo(meses[meses.length - 1])}`} actions={actions}>
       <IncomeBars rows={rendaPorTipo(assets, meses)} toggle={toggle} />
+    </Panel>
+  );
+}
+
+const MEDALHAS = ["#eac26e", "#b7c0dc", "#d1936b"];
+
+export function TopPerformers({ assets }: { assets: Asset[] }) {
+  const doze = MESES_HISTORICO.slice(-12);
+  const ranking = assets
+    .map((a) => {
+      const meses = a.historico.filter((h) => doze.includes(h.mes) && h.valor > 0);
+      const renda12 = a.historico.filter((h) => doze.includes(h.mes)).reduce((s, h) => s + h.valor, 0);
+      const yieldMedio = meses.length ? (meses.reduce((s, h) => s + h.valor, 0) / meses.length / a.valorInvestido) * 100 : 0;
+      return { a, renda12, yieldMedio };
+    })
+    .filter((r) => r.yieldMedio > 0)
+    .sort((x, y) => y.yieldMedio - x.yieldMedio)
+    .slice(0, 3);
+
+  return (
+    <Panel
+      title="Mais rentáveis"
+      description="Rentabilidade média mensal sobre o valor investido, nos últimos 12 meses"
+      actions={
+        <Link href="/ativos" className="inline-flex items-center gap-1 text-sm font-semibold text-ink hover:text-crp-blue-bright">
+          Ver todos <ArrowRight aria-hidden className="size-4" />
+        </Link>
+      }
+    >
+      <ol className="grid gap-3 sm:grid-cols-3">
+        {ranking.map((r, i) => (
+          <li key={r.a.id}>
+            <Link
+              href={`/ativos/${r.a.id}`}
+              className="group flex h-full flex-col rounded-xl bg-white/[0.03] p-4 ring-1 ring-inset ring-white/[0.06] transition-colors hover:bg-white/[0.06]"
+            >
+              <span className="flex items-center justify-between gap-2">
+                <span aria-label={`${i + 1}º mais rentável`} className="num text-sm font-bold" style={{ color: MEDALHAS[i] }}>
+                  {i + 1}º
+                </span>
+                <span className="flex min-w-0 items-center gap-1.5 text-xs text-ink-subtle">
+                  <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ background: TIPOS[r.a.tipo].cor }} />
+                  <span className="truncate">{TIPOS[r.a.tipo].nome}</span>
+                </span>
+              </span>
+              <span className="mt-2 block truncate text-[15px] font-semibold text-ink transition-colors group-hover:text-crp-blue-bright">
+                {r.a.nome}
+              </span>
+              <span className="num mt-3 block text-[28px] font-bold leading-none tracking-[-0.02em] text-ink">
+                {pct(r.yieldMedio)}
+              </span>
+              <span className="mt-1.5 text-xs text-ink-subtle">ao mês, em média</span>
+              <span className="num mt-3 block border-t border-white/[0.06] pt-2.5 text-xs text-ink-muted">
+                {brl(r.renda12)} em 12 meses
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ol>
     </Panel>
   );
 }
@@ -110,7 +169,7 @@ export function RecentPayments({ assets, payments }: { assets: Asset[]; payments
       }
     >
       {dataProx && (
-        <div className="mb-4 rounded-xl bg-crp-blue px-4 py-3.5 text-ink">
+        <div className="mb-4 rounded-xl bg-gradient-to-br from-crp-blue to-crp-blue/80 px-4 py-3.5 text-ink shadow-lg shadow-crp-blue/25">
           <p className="text-sm font-semibold">Próximo repasse previsto em {data(dataProx)}</p>
           <p className="num mt-0.5 text-2xl font-bold tracking-[-0.02em]">{brl(totalProx)}</p>
         </div>

@@ -17,7 +17,7 @@ export function Panel({
   bodyClassName?: string;
 }) {
   return (
-    <section className={`min-w-0 rounded-card bg-crp-surface ${className}`}>
+    <section className={`card-elev min-w-0 rounded-card ${className}`}>
       {(title || actions) && (
         <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 px-5 pt-5 sm:px-6 sm:pt-6">
           <div className="min-w-0">

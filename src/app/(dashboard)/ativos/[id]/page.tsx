@@ -64,9 +64,9 @@ export default async function AtivoPage({ params }: { params: Promise<{ id: stri
           { k: "Valor investido", v: brl(asset.valorInvestido) },
           { k: "Rendimento recebido", v: brl(recebido), s: `desde ${mesLongo(serie[0]?.mes ?? asset.inicioOperacao)}` },
           { k: "Média mensal em 12 meses", v: media12 ? brl(media12) : "—" },
-          { k: "Yield médio ao mês", v: media12 ? pct((media12 / asset.valorInvestido) * 100) : "—", s: `referência contratada ${pct(asset.yieldReferencia)}` },
+          { k: "Rentabilidade média mensal", v: media12 ? pct((media12 / asset.valorInvestido) * 100) : "—", s: `referência contratada ${pct(asset.yieldReferencia)}` },
         ].map((m) => (
-          <div key={m.k} className="rounded-card bg-crp-surface p-5">
+          <div key={m.k} className="card-elev rounded-card p-5">
             <dt className="text-sm text-ink-subtle">{m.k}</dt>
             <dd className="num mt-1.5 text-xl font-bold text-ink sm:text-2xl">{m.v}</dd>
             {m.s && <dd className="mt-1 text-xs text-ink-subtle">{m.s}</dd>}

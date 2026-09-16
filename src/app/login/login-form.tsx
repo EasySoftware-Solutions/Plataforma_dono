@@ -71,7 +71,7 @@ export function LoginForm({ voltar }: { voltar?: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="flex h-14 w-full items-center justify-center gap-2 rounded-pill bg-crp-blue text-base font-bold text-ink transition-colors hover:bg-crp-blue-bright disabled:opacity-60"
+        className="flex h-14 w-full items-center justify-center gap-2 rounded-pill bg-crp-blue text-base font-bold text-ink shadow-[0_16px_40px_-14px_color-mix(in_srgb,var(--color-crp-blue)_80%,transparent)] transition-[background-color,box-shadow,transform] duration-300 ease-out-expo hover:-translate-y-[1.5px] hover:bg-crp-blue-hover hover:shadow-[0_20px_44px_-16px_color-mix(in_srgb,var(--color-crp-blue)_90%,transparent)] active:translate-y-0 disabled:opacity-60 disabled:hover:translate-y-0"
       >
         {pending && <Loader2 aria-hidden className="size-5 animate-spin" />}
         {pending ? "Entrando…" : "Entrar na plataforma"}

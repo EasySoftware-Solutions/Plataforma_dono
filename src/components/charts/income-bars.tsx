@@ -51,7 +51,7 @@ export function IncomeBars({ rows, height = 300, toggle = true }: { rows: Income
                   dataKey={t}
                   stackId="renda"
                   fill={TIPOS[t].cor}
-                  stroke="#1f1f1f"
+                  stroke="#111c41"
                   strokeWidth={1}
                   radius={t === topo ? [4, 4, 0, 0] : 0}
                   isAnimationActive={false}

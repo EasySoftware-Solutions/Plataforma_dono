@@ -1,26 +1,28 @@
 @import "tailwindcss";
 
 @theme {
-  /* Paleta extraída ao vivo de grupocrp.com.br */
-  --color-crp-navy-deep: #0d1037;
-  --color-crp-navy: #131a3d;
-  --color-crp-surface: #182054;
-  --color-crp-surface-2: #232c5e;
-  --color-crp-line: #333f7a;
-  --color-crp-light: #f2f5fb;
-  --color-crp-blue: #3268de;
-  --color-crp-blue-bright: #309cfc;
+  /* Paleta institucional azul-profissional (padrão grandes corretoras) */
+  --color-crp-navy-deep: #060b1f;
+  --color-crp-navy: #0a1128;
+  --color-crp-surface: #101a3c;
+  --color-crp-surface-2: #16224b;
+  --color-crp-line: #263262;
+  --color-crp-light: #f3f6fc;
+  --color-crp-blue: #0e5df2;
+  --color-crp-blue-hover: #2e78ff;
+  --color-crp-blue-bright: #8ab4ff;
+  --color-crp-gold: #eac26e;
   --color-ink: #ffffff;
-  --color-ink-muted: #c3c9e0;
-  --color-ink-subtle: #9aa2c4;
-  --color-ink-dark: #101631;
-  --color-ink-dark-muted: #505a77;
-  --color-positive: #2ecc71;
-  --color-negative: #ff6b6f;
-  --color-cat-charge: #1c96a8;
-  --color-cat-tank: #9b5ee8;
-  --color-cat-capaxero: #d9538f;
-  --color-cat-solar: #c0851e;
+  --color-ink-muted: #c9d2e9;
+  --color-ink-subtle: #909bc3;
+  --color-ink-dark: #0b1230;
+  --color-ink-dark-muted: #4e5a7e;
+  --color-positive: #0ecb81;
+  --color-negative: #ff5c5c;
+  --color-cat-charge: #22a7c4;
+  --color-cat-tank: #9862f0;
+  --color-cat-capaxero: #f0619d;
+  --color-cat-solar: #e0a32e;
 
   --radius-pill: 40px;
   --radius-card: 16px;
@@ -34,16 +36,30 @@
   html {
     color-scheme: dark;
     -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
   }
   body {
-    background: var(--color-crp-navy);
+    background:
+      radial-gradient(1100px 480px at 50% -200px, color-mix(in srgb, var(--color-crp-blue) 13%, transparent), transparent 72%),
+      var(--color-crp-navy);
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
+  /* background-attachment: fixed é problemático no iOS; só em telas grandes */
+  @media (min-width: 1024px) {
+    body {
+      background-attachment: fixed;
+    }
+  }
   ::selection {
-    background: var(--color-crp-blue);
+    background: color-mix(in srgb, var(--color-crp-blue) 80%, transparent);
     color: var(--color-ink);
   }
   input, textarea {
@@ -51,7 +67,7 @@
   }
   :focus-visible {
     outline: 2px solid var(--color-crp-blue-bright);
-    outline-offset: 3px;
+    outline-offset: 2px;
     border-radius: 6px;
   }
   a {
@@ -80,6 +96,47 @@
   font-feature-settings: "tnum";
 }
 
+/* Cartão elevado padrão da plataforma */
+@utility card-elev {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-crp-surface-2) 30%, var(--color-crp-surface)), var(--color-crp-surface));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 20px 44px -28px rgba(2, 6, 22, 0.95);
+  outline: 1px solid rgba(255, 255, 255, 0.07);
+  outline-offset: -1px;
+}
+
+/* Reveal ao rolar: elementos com [data-reveal] sobem suavemente ao entrar na tela */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(26px);
+    transition:
+      opacity 720ms var(--ease-out-expo),
+      transform 720ms var(--ease-out-expo);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  [data-reveal].is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Entrada da folha de login */
+  .sheet-in {
+    animation: sheet-in 640ms var(--ease-out-expo) both;
+  }
+  @keyframes sheet-in {
+    from {
+      opacity: 0;
+      transform: translateY(34px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -93,7 +150,9 @@
 }
 
 @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
+  /* Animações guiadas por scroll com filter são caras: só em telas grandes,
+     onde não derrubam a resolução de rasterização do navegador mobile */
+  @media (prefers-reduced-motion: no-preference) and (min-width: 1024px) {
     .product-frame {
       transform-origin: 50% 0%;
       animation: settle linear both;

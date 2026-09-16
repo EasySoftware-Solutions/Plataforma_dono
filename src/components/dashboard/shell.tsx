@@ -39,7 +39,9 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               className={`flex h-11 items-center gap-3 rounded-xl px-3.5 text-[15px] font-semibold transition-colors ${
-                active ? "bg-white/[0.08] text-crp-blue-bright" : "text-ink-subtle hover:bg-white/[0.04] hover:text-ink"
+                active
+                  ? "bg-crp-blue/15 text-crp-blue-bright ring-1 ring-inset ring-crp-blue/30"
+                  : "text-ink-subtle hover:bg-white/[0.04] hover:text-ink"
               }`}
             >
               <Icon aria-hidden className="size-[18px]" strokeWidth={2.1} />
@@ -143,7 +145,7 @@ export function DashboardShell({ investor, notices, children }: { investor: Inve
         Pular para o conteúdo
       </a>
 
-      <aside className="sticky top-0 hidden h-dvh flex-col bg-crp-navy-deep px-4 py-6 lg:flex">
+      <aside className="sticky top-0 hidden h-dvh flex-col border-r border-white/[0.06] bg-crp-navy-deep px-4 py-6 lg:flex">
         <div className="px-3.5">
           <Logo href="/dashboard" />
         </div>
@@ -157,25 +159,35 @@ export function DashboardShell({ investor, notices, children }: { investor: Inve
         </p>
       </aside>
 
-      {drawer && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
-          <button type="button" aria-label="Fechar menu" className="absolute inset-0 bg-black/70" onClick={() => setDrawer(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-[280px] flex-col bg-crp-navy-deep px-4 py-5">
-            <div className="flex items-center justify-between px-3.5">
-              <Logo href="/dashboard" />
-              <button type="button" onClick={() => setDrawer(false)} aria-label="Fechar menu" className="flex size-10 items-center justify-center rounded-full text-ink-muted hover:bg-white/[0.08]">
-                <X className="size-5" />
-              </button>
-            </div>
-            <nav aria-label="Principal" className="mt-8">
-              <NavLinks onNavigate={() => setDrawer(false)} />
-            </nav>
+      <div
+        inert={!drawer}
+        aria-hidden={!drawer}
+        className={`fixed inset-0 z-50 lg:hidden ${drawer ? "" : "pointer-events-none"}`}
+      >
+        <button
+          type="button"
+          aria-label="Fechar menu"
+          tabIndex={drawer ? 0 : -1}
+          className={`absolute inset-0 bg-black/70 transition-opacity duration-300 ease-out-expo ${drawer ? "opacity-100" : "opacity-0"}`}
+          onClick={() => setDrawer(false)}
+        />
+        <div
+          className={`absolute inset-y-0 left-0 flex w-[300px] max-w-[86vw] flex-col border-r border-white/[0.07] bg-crp-navy-deep px-4 py-5 shadow-[24px_0_64px_-24px_rgba(2,6,22,0.9)] transition-transform duration-300 ease-out-expo will-change-transform ${drawer ? "translate-x-0" : "-translate-x-full"}`}
+        >
+          <div className="flex items-center justify-between px-3.5">
+            <Logo href="/dashboard" />
+            <button type="button" onClick={() => setDrawer(false)} aria-label="Fechar menu" tabIndex={drawer ? 0 : -1} className="flex size-10 items-center justify-center rounded-full text-ink-muted hover:bg-white/[0.08]">
+              <X className="size-5" />
+            </button>
           </div>
+          <nav aria-label="Principal" className="mt-8">
+            <NavLinks onNavigate={() => setDrawer(false)} />
+          </nav>
         </div>
-      )}
+      </div>
 
       <div className="min-w-0">
-        <header className="sticky top-0 z-30 bg-crp-navy/90 backdrop-blur-md">
+        <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-crp-navy lg:bg-crp-navy/80 lg:backdrop-blur-xl">
           <div className="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-10">
             <button type="button" onClick={() => setDrawer(true)} aria-label="Abrir menu" className="-ml-2 flex size-10 items-center justify-center rounded-full text-ink hover:bg-white/[0.08] lg:hidden">
               <Menu className="size-5" />
@@ -183,8 +195,8 @@ export function DashboardShell({ investor, notices, children }: { investor: Inve
             <div className="lg:hidden">
               <Logo href="/dashboard" />
             </div>
-            <p className="ml-auto hidden items-center gap-2 rounded-full bg-white/[0.06] px-3 py-1.5 text-xs font-semibold text-ink-muted md:flex lg:ml-0">
-              <span aria-hidden className="size-1.5 rounded-full bg-crp-blue" />
+            <p className="ml-auto hidden items-center gap-2 rounded-full bg-white/[0.05] px-3 py-1.5 text-xs font-semibold text-ink-muted ring-1 ring-inset ring-white/10 md:flex lg:ml-0">
+              <span aria-hidden className="size-1.5 rounded-full bg-crp-blue-bright" />
               Ambiente de demonstração · valores fictícios
             </p>
             <div className="ml-auto flex items-center gap-1">

@@ -22,6 +22,26 @@ export function HeroVideo({ src, poster }: { src: string; poster: string }) {
     return () => mq.removeEventListener("change", apply);
   }, []);
 
+  // Pausa o vídeo quando o herói sai da tela: economiza GPU durante a rolagem
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          if (playing && !reduce) {
+            v.play().catch(() => {});
+          }
+        } else {
+          v.pause();
+        }
+      },
+      { threshold: 0.2 },
+    );
+    io.observe(v);
+    return () => io.disconnect();
+  }, [playing, reduce]);
+
   function toggle() {
     const v = ref.current;
     if (!v) return;

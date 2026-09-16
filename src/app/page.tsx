@@ -8,6 +8,7 @@ import { mesLongo, pct } from "@/lib/format";
 import { Logo } from "@/components/logo";
 import { ButtonLink, buttonClass } from "@/components/ui/button";
 import { SiteHeader } from "@/components/landing/site-header";
+import { ScrollFX } from "@/components/landing/scroll-fx";
 import { HeroVideo } from "@/components/landing/hero-video";
 import { IncomePanel, PortfolioSummary } from "@/components/dashboard/overview";
 import { IndexLines } from "@/components/charts/index-lines";
@@ -29,6 +30,7 @@ export default async function Home() {
   return (
     <>
       <SiteHeader />
+      <ScrollFX />
       <main>
         {/* Hero */}
         <section className="relative flex min-h-[640px] items-end overflow-hidden bg-crp-navy-deep pb-16 pt-32 sm:items-center sm:pb-24 lg:min-h-[max(720px,100dvh)]">
@@ -44,7 +46,7 @@ export default async function Home() {
               A DONO é a plataforma dos investidores do Grupo CRP. Carregadores elétricos, postos, máquinas Capaxero e usinas solares que são seus, com rendimento, relatórios e pagamentos acompanhados mês a mês.
             </p>
             <div className="mt-9 flex flex-wrap gap-3">
-              <ButtonLink href="/login" size="lg">Acessar plataforma</ButtonLink>
+              <ButtonLink href="/login" size="lg">Abra sua conta</ButtonLink>
               <a href="#manifesto" className={buttonClass("secondary", "lg", "backdrop-blur-sm")}>Conhecer a DONO</a>
             </div>
           </div>
@@ -60,7 +62,7 @@ export default async function Home() {
               { t: "Cada repasse", d: "Do previsto ao pago, com status" },
             ].map((i) => (
               <li key={i.t}>
-                <p className="text-[26px] font-extrabold leading-tight tracking-[-0.03em] sm:text-[32px]">{i.t}</p>
+                <p className="text-[26px] font-extrabold leading-tight tracking-[-0.03em] text-ink sm:text-[32px]">{i.t}</p>
                 <p className="mt-1 text-[15px] font-medium text-ink/75">{i.d}</p>
               </li>
             ))}
@@ -70,10 +72,10 @@ export default async function Home() {
         {/* Manifesto */}
         <section id="manifesto" className="scroll-mt-16 bg-crp-light text-ink-dark">
           <div className="mx-auto grid max-w-[1280px] gap-12 px-5 py-24 sm:px-8 lg:grid-cols-[1.25fr_1fr] lg:gap-20 lg:py-32">
-            <h2 className="text-[40px] font-extrabold leading-[1.04] tracking-[-0.035em] sm:text-[56px] lg:text-[64px]">
+            <h2 data-reveal className="text-[40px] font-extrabold leading-[1.04] tracking-[-0.035em] sm:text-[56px] lg:text-[64px]">
               Renda passiva sempre foi sobre ter. A DONO é sobre ver.
             </h2>
-            <div className="space-y-6 self-end text-lg leading-relaxed text-ink-dark-muted">
+            <div data-reveal className="space-y-6 self-end text-lg leading-relaxed text-ink-dark-muted" style={{ "--reveal-delay": "120ms" } as React.CSSProperties}>
               <p>
                 Por anos, o Club Renda Passiva reuniu investidores em torno de uma ideia simples: ser dono de ativos que trabalham no mundo real. Um carregador numa rodovia, uma usina no sertão, uma máquina num estacionamento cheio de motos.
               </p>
@@ -90,12 +92,12 @@ export default async function Home() {
         {/* Ativos */}
         <section id="ativos" className="scroll-mt-16 bg-crp-navy">
           <div className="mx-auto max-w-[1280px] px-5 py-24 sm:px-8 lg:py-32">
-            <div className="flex flex-wrap items-end justify-between gap-6">
+            <div data-reveal className="flex flex-wrap items-end justify-between gap-6">
               <h2 className="max-w-[18ch] text-[36px] font-extrabold leading-[1.06] tracking-[-0.03em] text-ink sm:text-[48px]">
                 Quatro negócios reais do ecossistema Grupo CRP.
               </h2>
-              <a href={CRP} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-ink hover:text-crp-blue-bright">
-                Conheça o Grupo CRP <ArrowUpRight aria-hidden className="size-4" />
+              <a href={CRP} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-1.5 text-[15px] font-semibold text-ink transition-colors hover:text-crp-blue-bright">
+                Conheça o Grupo CRP <ArrowUpRight aria-hidden className="size-4 transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </a>
             </div>
             <AssetShowcase />
@@ -105,7 +107,7 @@ export default async function Home() {
         {/* Como funciona */}
         <section id="como-funciona" className="scroll-mt-16 bg-crp-light text-ink-dark">
           <div className="mx-auto max-w-[1280px] px-5 py-24 sm:px-8 lg:py-32">
-            <h2 className="max-w-[16ch] text-[36px] font-extrabold leading-[1.06] tracking-[-0.03em] sm:text-[48px]">Do ativo ao seu extrato, em três passos.</h2>
+            <h2 data-reveal className="max-w-[16ch] text-[36px] font-extrabold leading-[1.06] tracking-[-0.03em] sm:text-[48px]">Do ativo ao seu extrato, em três passos.</h2>
             <ol className="mt-14 grid gap-10 md:grid-cols-3 md:gap-8">
               {[
                 { t: "Acesse sua conta", d: "Entre com o e-mail cadastrado como investidor. Sua carteira aparece completa, ativo por ativo." },
@@ -125,7 +127,7 @@ export default async function Home() {
         {/* Plataforma */}
         <section id="plataforma" className="scroll-mt-16 overflow-hidden bg-crp-navy-deep">
           <div className="mx-auto max-w-[1280px] px-5 pt-24 sm:px-8 lg:pt-32">
-            <div className="flex flex-wrap items-end justify-between gap-6">
+            <div data-reveal className="flex flex-wrap items-end justify-between gap-6">
               <h2 className="max-w-[15ch] text-[36px] font-extrabold leading-[1.06] tracking-[-0.03em] text-ink sm:text-[48px]">A plataforma, sem maquete.</h2>
               <p className="max-w-[46ch] text-[16px] leading-relaxed text-ink-subtle">
                 Abaixo está a tela de visão geral da DONO funcionando, com uma carteira de demonstração. É isso que você vê ao entrar.
@@ -181,11 +183,11 @@ export default async function Home() {
         </section>
 
         {/* CTA final */}
-        <section className="bg-crp-blue text-ink">
+        <section data-reveal className="bg-crp-blue text-ink">
           <div className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-8 px-5 py-20 sm:px-8 lg:flex-row lg:items-center lg:py-24">
             <h2 className="max-w-[18ch] text-[36px] font-extrabold leading-[1.04] tracking-[-0.035em] sm:text-[52px]">Seus ativos já estão trabalhando. Venha ver.</h2>
             <div className="flex flex-wrap items-center gap-5">
-              <ButtonLink href="/login" variant="dark" size="lg">Acessar plataforma</ButtonLink>
+              <ButtonLink href="/login" variant="dark" size="lg">Abra sua conta</ButtonLink>
               <a href={CRP} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[15px] font-bold underline decoration-2 underline-offset-4 hover:no-underline">
                 Falar com o Grupo CRP <ArrowUpRight aria-hidden className="size-4" />
               </a>

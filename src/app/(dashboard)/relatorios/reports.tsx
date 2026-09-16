@@ -134,7 +134,7 @@ export function Reports({ assets, payments, investidor }: { assets: Asset[]; pay
       resumo: [
         { rotulo: "Total recebido", valor: brl(total) },
         { rotulo: "Média mensal", valor: brl(total / (hist.length || 1)) },
-        { rotulo: "Yield médio ao mês", valor: pct((total / (hist.length || 1) / a.valorInvestido) * 100) },
+        { rotulo: "Rentabilidade média mensal", valor: pct((total / (hist.length || 1) / a.valorInvestido) * 100) },
       ],
       colunas: [{ header: "Mês" }, { header: "Rendimento", align: "right" }, { header: "% sobre o investido", align: "right" }, { header: "Acumulado", align: "right" }],
       linhas: hist.map((h, i) => [mesCurto(h.mes), brl(h.valor), pct((h.valor / a.valorInvestido) * 100), brl(hist.slice(0, i + 1).reduce((s, x) => s + x.valor, 0))]),
@@ -216,7 +216,7 @@ export function Reports({ assets, payments, investidor }: { assets: Asset[]; pay
     {
       key: "ativo",
       titulo: "Desempenho por ativo",
-      texto: "Histórico mês a mês de um ativo, com acumulado e yield desde o início da operação.",
+      texto: "Histórico mês a mês de um ativo, com acumulado e rentabilidade média desde o início da operação.",
       build: docAtivo,
       controle: (
         <select aria-label="Ativo" value={ativo} onChange={(e) => setAtivo(e.target.value)} className={selectCls}>
@@ -235,7 +235,7 @@ export function Reports({ assets, payments, investidor }: { assets: Asset[]; pay
 
   return (
     <div className="grid gap-4 xl:grid-cols-[1.8fr_1fr]">
-      <section className="min-w-0 divide-y divide-white/[0.06] rounded-card bg-crp-surface">
+      <section className="card-elev min-w-0 divide-y divide-white/[0.06] rounded-card">
         {relatorios.map((r) => (
           <div key={r.key} className="flex flex-col gap-4 p-5 sm:p-6 lg:flex-row lg:items-center">
             <div className="min-w-0 flex-1">
@@ -254,8 +254,10 @@ export function Reports({ assets, payments, investidor }: { assets: Asset[]; pay
                       type="button"
                       onClick={() => gerar(r.key, r.build, f)}
                       disabled={!!busy}
-                      className={`inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-pill px-4 text-sm font-semibold transition-colors disabled:opacity-60 sm:flex-none ${
-                        f === "pdf" ? "bg-crp-blue text-ink hover:bg-crp-blue-bright" : "bg-white/[0.08] text-ink hover:bg-white/[0.14]"
+                      className={`inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-pill px-4 text-sm font-semibold transition-[background-color,box-shadow,transform] duration-300 ease-out-expo hover:-translate-y-[1px] active:translate-y-0 disabled:opacity-60 sm:flex-none ${
+                        f === "pdf"
+                          ? "bg-crp-blue text-ink shadow-[0_10px_26px_-12px_color-mix(in_srgb,var(--color-crp-blue)_75%,transparent)] hover:bg-crp-blue-hover"
+                          : "bg-white/[0.08] text-ink outline-1 outline-offset-[-1px] outline-white/15 hover:bg-white/[0.14]"
                       }`}
                     >
                       {b ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <Icon aria-hidden className="size-4" />}

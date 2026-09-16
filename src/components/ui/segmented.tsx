@@ -17,7 +17,7 @@ export function Segmented<T extends string>({
     <div
       role="radiogroup"
       aria-label={label}
-      className={`inline-flex rounded-pill p-1 ${tone === "dark" ? "bg-white/[0.06]" : "bg-black/[0.06]"}`}
+      className={`flex w-full rounded-pill p-1 sm:inline-flex sm:w-auto ${tone === "dark" ? "bg-white/[0.06]" : "bg-black/[0.06]"}`}
     >
       {options.map((o) => {
         const active = o.value === value;
@@ -28,11 +28,9 @@ export function Segmented<T extends string>({
             role="radio"
             aria-checked={active}
             onClick={() => onChange(o.value)}
-            className={`h-8 rounded-pill px-3.5 text-sm font-semibold transition-colors duration-200 ${
+            className={`h-8 flex-1 rounded-pill px-3.5 text-sm font-semibold transition-all duration-200 sm:flex-none ${
               active
-                ? tone === "dark"
-                  ? "bg-crp-blue text-ink"
-                  : "bg-crp-navy text-ink"
+                ? "bg-ink text-ink-dark shadow-[0_6px_18px_-8px_rgba(220,228,255,0.35)]"
                 : tone === "dark"
                   ? "text-ink-subtle hover:text-ink"
                   : "text-ink-dark-muted hover:text-ink-dark"

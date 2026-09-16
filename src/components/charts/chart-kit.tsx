@@ -3,12 +3,12 @@
 import { Table2, BarChart3 } from "lucide-react";
 import type { ReactNode } from "react";
 
-export const AXIS = { stroke: "transparent", tick: { fill: "#9a9a9a", fontSize: 12 }, tickLine: false, axisLine: false } as const;
-export const GRID = "rgba(255,255,255,0.07)";
+export const AXIS = { stroke: "transparent", tick: { fill: "#8e9ac2", fontSize: 12 }, tickLine: false, axisLine: false } as const;
+export const GRID = "rgba(144,155,195,0.14)";
 
 export function TooltipBox({ title, rows, footer }: { title: string; rows: { label: string; value: string; color?: string; strong?: boolean }[]; footer?: ReactNode }) {
   return (
-    <div className="min-w-[200px] rounded-xl bg-crp-surface-2 px-3.5 py-3 text-sm shadow-[0_12px_32px_-8px_rgba(0,0,0,0.7)]">
+    <div className="min-w-[200px] rounded-xl bg-crp-surface-2 px-3.5 py-3 text-sm shadow-[0_16px_40px_-12px_rgba(2,6,22,0.85)] ring-1 ring-white/10">
       <p className="mb-2 font-semibold text-ink">{title}</p>
       <ul className="space-y-1.5">
         {rows.map((r) => (
@@ -58,29 +58,48 @@ export function ViewToggle({ table, onChange }: { table: boolean; onChange: (t: 
 
 export function DataTableView({ head, rows }: { head: string[]; rows: (string | number)[][] }) {
   return (
-    <div className="max-h-[320px] overflow-auto rounded-xl">
-      <table className="w-full min-w-[520px] text-sm">
-        <thead className="sticky top-0 bg-crp-surface">
-          <tr>
-            {head.map((h, i) => (
-              <th key={h} className={`px-3 py-2 font-semibold text-ink-subtle ${i ? "text-right" : "text-left"}`}>
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r, ri) => (
-            <tr key={ri} className="border-t border-white/[0.06]">
-              {r.map((c, i) => (
-                <td key={i} className={`num px-3 py-2 ${i ? "text-right text-ink" : "text-left text-ink-muted"}`}>
-                  {c}
-                </td>
+    <>
+      {/* Mobile: um cartão por linha, sem rolagem lateral */}
+      <ul className="max-h-[320px] space-y-2 overflow-y-auto sm:hidden">
+        {rows.map((r, ri) => (
+          <li key={ri} className="rounded-xl bg-white/[0.03] px-3.5 py-3 ring-1 ring-inset ring-white/[0.06]">
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-subtle">{r[0]}</p>
+            <dl className="mt-2 space-y-1.5">
+              {r.slice(1).map((c, ci) => (
+                <div key={ci} className="flex items-baseline justify-between gap-3 text-sm">
+                  <dt className="text-ink-muted">{head[ci + 1]}</dt>
+                  <dd className="num font-medium text-ink">{c}</dd>
+                </div>
+              ))}
+            </dl>
+          </li>
+        ))}
+      </ul>
+      {/* Tablet/desktop: tabela */}
+      <div className="hidden max-h-[320px] overflow-auto rounded-xl sm:block">
+        <table className="w-full min-w-[520px] text-sm">
+          <thead className="sticky top-0 bg-crp-surface">
+            <tr>
+              {head.map((h, i) => (
+                <th key={h} className={`px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-ink-subtle ${i ? "text-right" : "text-left"}`}>
+                  {h}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {rows.map((r, ri) => (
+              <tr key={ri} className="border-t border-white/[0.06]">
+                {r.map((c, i) => (
+                  <td key={i} className={`num px-3 py-2 ${i ? "text-right text-ink" : "text-left text-ink-muted"}`}>
+                    {c}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
