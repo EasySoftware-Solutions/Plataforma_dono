@@ -1,8 +1,11 @@
-// DADOS MOCKADOS DO CLIENTE MAGNO, USINAS NB1 E NB2.
+// DADOS MOCKADOS DO CLIENTE MAGNO BORGES, USINAS NB1 E NB2.
 //
 // Origem dos números (planilha Consolidado_NB1_e_NB2_2026.xlsx):
 //  - "Demonstrativo 2025-2026": líquido geral mensal de cada usina, mar/2025 a mar/2026.
-//    A planilha não traz abr e mai de 2025; esses meses ficam sem renda.
+//    A planilha não traz abr e mai de 2025 nem de 2026; esses quatro meses são ESTIMADOS por
+//    interpolação linear entre os meses vizinhos com dados (mar→jun de cada ano):
+//      2025: NB1 4.969,42 e 5.283,34 | NB2 5.019,94 e 5.208,69
+//      2026: NB1 4.402,19 e 5.116,17 | NB2 4.083,72 e 4.246,83
 //  - "NB1/NB2 - Relatórios 2026": faturamento real líquido de jun a ago/2026. Setembro de NB1
 //    existe só parcial e NB2 ainda não tem relatório, então o último mês fechado é agosto.
 //    Para NB2/junho vale a versão definitiva (2ª janela), não a preliminar.
@@ -10,13 +13,15 @@
 //    um mês em relação aos relatórios.
 //
 // O QUE É MOCK (não vem da planilha, trocar pelos dados reais do contrato):
-//  - FRACAO_CLIENTE: o demonstrativo mostra a "fração 1/3" dos sócios; assumimos que Magno detém 1/3.
-//  - valorInvestido de cada usina, datas de aquisição, cidade/UF e coordenadas.
+//  - FRACAO_CLIENTE: definido em 1 a pedido do investidor — a plataforma exibe o líquido
+//    COMPLETO de cada usina, sem dividir a "fração 1/3" dos sócios do demonstrativo.
+//  - Datas de aquisição, cidade/UF e coordenadas.
 //  - Documentos e avisos.
 import type { Asset, Investor, MonthlyIncome, Notice } from "@/types";
 import { MESES_HISTORICO, ULTIMO_MES_FECHADO } from "./constants";
 
-export const FRACAO_CLIENTE = 1 / 3;
+/** Fração do líquido da usina exibida na plataforma (1 = líquido completo). */
+export const FRACAO_CLIENTE = 1;
 
 
 const round = (v: number) => Math.round(v * 100) / 100;
@@ -24,6 +29,8 @@ const round = (v: number) => Math.round(v * 100) / 100;
 /** Faturamento real líquido da usina inteira (R$), antes da fração do cliente. */
 const LIQUIDO_NB1: Record<string, number> = {
   "2025-03": 4655.49,
+  "2025-04": 4969.42, // estimado (interpolação mar→jun/25)
+  "2025-05": 5283.34, // estimado (interpolação mar→jun/25)
   "2025-06": 5597.27,
   "2025-07": 5253.23,
   "2025-08": 6001.35,
@@ -34,6 +41,8 @@ const LIQUIDO_NB1: Record<string, number> = {
   "2026-01": 5659.64,
   "2026-02": 5936.41,
   "2026-03": 3688.2,
+  "2026-04": 4402.19, // estimado (interpolação mar→jun/26)
+  "2026-05": 5116.17, // estimado (interpolação mar→jun/26)
   "2026-06": 5830.16,
   "2026-07": 4933.77,
   "2026-08": 5358.04,
@@ -41,6 +50,8 @@ const LIQUIDO_NB1: Record<string, number> = {
 
 const LIQUIDO_NB2: Record<string, number> = {
   "2025-03": 4831.19,
+  "2025-04": 5019.94, // estimado (interpolação mar→jun/25)
+  "2025-05": 5208.69, // estimado (interpolação mar→jun/25)
   "2025-06": 5397.44,
   "2025-07": 4748.98,
   "2025-08": 6440.08,
@@ -51,6 +62,8 @@ const LIQUIDO_NB2: Record<string, number> = {
   "2026-01": 6499.42,
   "2026-02": 5492.43,
   "2026-03": 3920.62,
+  "2026-04": 4083.72, // estimado (interpolação mar→jun/26)
+  "2026-05": 4246.83, // estimado (interpolação mar→jun/26)
   "2026-06": 4409.93,
   "2026-07": 5382.25,
   "2026-08": 6236.11,
@@ -78,7 +91,7 @@ const SEEDS: Seed[] = [
     uf: "MG",
     dataAquisicao: "2025-02-20",
     inicioOperacao: "2025-03",
-    valorInvestido: 140000,
+    valorInvestido: 240000,
     liquido: LIQUIDO_NB1,
     descricao: "Usina solar de geração distribuída. A energia gerada é compensada na unidade consumidora do beneficiário principal e o faturamento é liquidado todo mês na primeira janela.",
     especificacoes: [
@@ -87,7 +100,7 @@ const SEEDS: Seed[] = [
       { rotulo: "Geração de jun a ago/2026", valor: "25.158 kWh" },
       { rotulo: "Tarifa média de compensação", valor: "R$ 0,68 por kWh" },
       { rotulo: "Margem líquida média", valor: "80,1% do faturamento bruto" },
-      { rotulo: "Sua participação", valor: "1/3 do líquido da usina" },
+      { rotulo: "Sua participação", valor: "100% do líquido da usina" },
       { rotulo: "Modelo de receita", valor: "Venda de créditos de energia" },
     ],
     coordenadas: { lat: -16.7282, lng: -43.8578 },
@@ -99,7 +112,7 @@ const SEEDS: Seed[] = [
     uf: "MG",
     dataAquisicao: "2025-02-20",
     inicioOperacao: "2025-03",
-    valorInvestido: 130000,
+    valorInvestido: 240000,
     liquido: LIQUIDO_NB2,
     descricao: "Usina solar de geração distribuída. O faturamento é liquidado na segunda janela de cada mês. O relatório preliminar de junho foi refeito nessa janela e vale o valor definitivo.",
     especificacoes: [
@@ -108,7 +121,7 @@ const SEEDS: Seed[] = [
       { rotulo: "Geração de jun a ago/2026", valor: "27.257 kWh" },
       { rotulo: "Tarifa média de compensação", valor: "R$ 0,66 por kWh" },
       { rotulo: "Margem líquida média", valor: "80,6% do faturamento bruto" },
-      { rotulo: "Sua participação", valor: "1/3 do líquido da usina" },
+      { rotulo: "Sua participação", valor: "100% do líquido da usina" },
       { rotulo: "Modelo de receita", valor: "Venda de créditos de energia" },
     ],
     coordenadas: { lat: -15.8029, lng: -43.3094 },
@@ -152,7 +165,7 @@ export const ASSETS: Asset[] = SEEDS.map((s) => {
 });
 
 
-export const DEMO_INVESTOR: Investor = { nome: "Magno", email: "magno@exemplo.com.br" };
+export const DEMO_INVESTOR: Investor = { nome: "Magno Borges", email: "magno@exemplo.com.br" };
 
 
 export const NOTICES: Notice[] = [

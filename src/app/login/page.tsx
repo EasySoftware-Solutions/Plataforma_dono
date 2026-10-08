@@ -65,7 +65,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
 
           <p className="mt-7 flex items-start gap-2.5 rounded-xl bg-white/[0.04] p-4 text-sm leading-relaxed text-ink-subtle ring-1 ring-inset ring-white/[0.07]">
             <Info aria-hidden className="mt-0.5 size-4 shrink-0 text-ink-muted" />
-            Ambiente de demonstração: qualquer e-mail válido e senha com 4 caracteres ou mais dão acesso à carteira de demonstração do cliente Magno (usinas NB1 e NB2).
+            Ambiente de demonstração: qualquer e-mail válido e senha com 4 caracteres ou mais dão acesso à carteira de demonstração do cliente Magno Borges (usinas NB1 e NB2).
           </p>
         </div>
 

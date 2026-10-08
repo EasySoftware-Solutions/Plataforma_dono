@@ -6,7 +6,7 @@ import { SESSION_COOKIE } from "./routes";
 
 export { SESSION_COOKIE };
 
-// A carteira de demonstração é a do cliente Magno: qualquer login entra como ele.
+// A carteira de demonstração é a do cliente Magno Borges: qualquer login entra como ele.
 export function encodeSession(email: string) {
   return Buffer.from(JSON.stringify({ email, nome: DEMO_INVESTOR.nome })).toString("base64url");
 }
