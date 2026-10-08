@@ -124,7 +124,21 @@ function Notifications({ notices }: { notices: Notice[] }) {
   );
 }
 
-function UserMenu({ investor, theme, onToggleTheme }: { investor: Investor; theme: Theme; onToggleTheme: () => void }) {
+// Troca de tema: instantânea, sem animar cores da página inteira
+function ThemeToggle({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggleTheme}
+      aria-label={`Mudar para modo ${theme === "dark" ? "claro" : "escuro"}`}
+      className="flex size-11 items-center justify-center rounded-full text-ink-muted transition-colors duration-150 hover:bg-white/[0.08] hover:text-ink active:bg-white/[0.08]"
+    >
+      {theme === "dark" ? <Moon aria-hidden className="size-5" /> : <Sun aria-hidden className="size-5" />}
+    </button>
+  );
+}
+
+function UserMenu({ investor }: { investor: Investor }) {
   const [open, setOpen] = useState(false);
   const ref = useClickOutside(open, () => setOpen(false));
   const iniciais = investor.nome.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
@@ -147,22 +161,6 @@ function UserMenu({ investor, theme, onToggleTheme }: { investor: Investor; them
               <p className="truncate text-sm font-semibold text-ink">{investor.nome}</p>
               <p className="truncate text-sm text-ink-subtle">{investor.email}</p>
             </div>
-            {/* Troca de tema: instantânea, sem animar cores da página inteira */}
-            <button
-              type="button"
-              role="switch"
-              aria-checked={theme === "dark"}
-              onClick={onToggleTheme}
-              className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold text-ink-muted transition-colors duration-150 hover:bg-white/[0.06] hover:text-ink"
-            >
-              {theme === "dark" ? <Moon aria-hidden className="size-4" /> : <Sun aria-hidden className="size-4" />}
-              <span className="flex-1 text-left">Modo escuro</span>
-              <span aria-hidden className={`relative h-6 w-10 shrink-0 rounded-full transition-colors duration-150 ${theme === "dark" ? "bg-dono-blue" : "bg-white/[0.16]"}`}>
-                <span
-                  className={`absolute left-0.5 top-0.5 size-5 rounded-full bg-[#ffffff] shadow-[0_1px_3px_rgba(0,0,0,0.3)] transition-transform duration-150 ease-out-expo ${theme === "dark" ? "translate-x-4" : ""}`}
-                />
-              </span>
-            </button>
             <form action={logout}>
               <button type="submit" className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold text-ink-muted transition-colors duration-150 hover:bg-white/[0.06] hover:text-ink">
                 <LogOut aria-hidden className="size-4" />
@@ -227,7 +225,8 @@ export function DashboardShell({
             </p>
             <div className="ml-auto flex shrink-0 items-center gap-1">
               <Notifications notices={notices} />
-              <UserMenu investor={investor} theme={theme} onToggleTheme={toggleTheme} />
+              <ThemeToggle theme={theme} onToggleTheme={toggleTheme} />
+              <UserMenu investor={investor} />
             </div>
           </div>
         </header>
