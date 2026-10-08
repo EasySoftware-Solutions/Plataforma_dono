@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Check, Download, Loader2 } from "lucide-react";
 import type { Asset, MarketMonth } from "@/types";
-import { desempenhoAtivo, indiceBase100, MERCADO_KEYS, metricas, rendaAtivoMes, resumo, retornosDono, retornosMercado, type MercadoKey, type SerieKey } from "@/lib/calc";
+import { indiceBase100, MERCADO_KEYS, metricas, resumo, retornosDono, retornosMercado, type MercadoKey, type SerieKey } from "@/lib/calc";
 import { brl, mesLongo, mesNome, pct } from "@/lib/format";
 import { exportPdf } from "@/lib/exports";
 import { MESES_HISTORICO, ULTIMOS_12 } from "@/lib/constants";
@@ -39,10 +39,6 @@ export function Comparator({ assets, market }: { assets: Asset[]; market: Market
     [series, assets, market, meses, valor],
   );
   const dono = tabela.find((t) => t.s === "dono")!;
-  const porUsina = useMemo(
-    () => assets.map((a) => ({ a, mes: rendaAtivoMes(a, r.mes), ...desempenhoAtivo(a, ULTIMOS_12) })),
-    [assets, r.mes],
-  );
 
   const toggle = (k: MercadoKey) =>
     setAtivos((cur) => (cur.includes(k) ? cur.filter((c) => c !== k) : [...cur, k]));
@@ -85,17 +81,8 @@ export function Comparator({ assets, market }: { assets: Asset[]; market: Market
               <Delta value={r.variacaoMes} />
             </div>
             <p className="max-w-[65ch] text-sm leading-relaxed text-ink-subtle">
-              Renda líquida de {mesNome(r.mes)}: sua participação de 1/3 no faturamento líquido de {r.emOperacao} {r.emOperacao === 1 ? "usina solar em operação" : "usinas solares em operação"}.
+              Renda líquida de {mesNome(r.mes)}: o faturamento líquido completo de {r.emOperacao} {r.emOperacao === 1 ? "usina solar em operação" : "usinas solares em operação"}.
             </p>
-            <dl className="grid gap-x-6 gap-y-1.5 pt-3 text-sm sm:grid-cols-[auto_1fr_1fr]">
-              {porUsina.map((u) => (
-                <div key={u.a.id} className="contents">
-                  <dt className="font-semibold text-ink">{u.a.nome}</dt>
-                  <dd className="num text-ink-muted">{brl(u.mes)} em {mesNome(r.mes)}</dd>
-                  <dd className="num text-ink-subtle">{brl(u.renda)} em 12 meses, {pct(u.yieldMedio)} ao mês</dd>
-                </div>
-              ))}
-            </dl>
           </div>
 
           <div className="grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 xl:w-[560px] xl:shrink-0">
