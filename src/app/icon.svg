@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Ícone DONO: o N do logotipo com seus prolongamentos, no azul da marca sobre a base escura -->
+  <rect width="64" height="64" rx="14" fill="#11131b"/>
+  <g transform="translate(17.86 14.57) scale(0.0948)" fill="#27aae1">
+    <path d="M0 44.19L65.38 44.19L232.46 241.96L232.46 0L298.35 0L298.35 325.24L232.62 325.24L66.05 136.26L66.05 367.74L0 367.74Z"/>
+  </g>
+</svg>

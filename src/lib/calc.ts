@@ -1,6 +1,31 @@
 import type { Asset, AssetType, MarketMonth } from "@/types";
-import { addMonths, MESES_HISTORICO } from "./mock-data";
-import { TIPO_ORDEM, ULTIMO_MES_FECHADO } from "./constants";
+import { addMonths } from "./months";
+import { MESES_HISTORICO, TIPO_ORDEM, ULTIMOS_12, ULTIMO_MES_FECHADO } from "./constants";
+
+type Meses = readonly string[];
+
+export const rendaAtivoMes = (a: Asset, mes: string) => a.historico.find((h) => h.mes === mes)?.valor ?? 0;
+
+/**
+ * Rendimento total de um ativo no período e a rentabilidade média mensal sobre o
+ * valor investido, considerando só os meses em que ele de fato gerou renda.
+ */
+export function desempenhoAtivo(a: Asset, meses: Meses) {
+  const set = new Set(meses);
+  const hist = a.historico.filter((h) => set.has(h.mes));
+  const renda = hist.reduce((s, h) => s + h.valor, 0);
+  const mesesComRenda = hist.filter((h) => h.valor > 0).length;
+  const mediaMensal = mesesComRenda ? renda / mesesComRenda : 0;
+  return { renda, mediaMensal, yieldMedio: (mediaMensal / a.valorInvestido) * 100 };
+}
+
+export function maisRentaveis(assets: Asset[], n = 3, meses: Meses = ULTIMOS_12) {
+  return assets
+    .map((a) => ({ a, ...desempenhoAtivo(a, meses) }))
+    .filter((r) => r.yieldMedio > 0)
+    .sort((x, y) => y.yieldMedio - x.yieldMedio)
+    .slice(0, n);
+}
 
 export const investidoEm = (assets: Asset[], mes: string) =>
   assets.filter((a) => a.dataAquisicao.slice(0, 7) <= mes).reduce((s, a) => s + a.valorInvestido, 0);
@@ -8,16 +33,15 @@ export const investidoEm = (assets: Asset[], mes: string) =>
 export const investidoOperando = (assets: Asset[], mes: string) =>
   assets.filter((a) => a.inicioOperacao <= mes).reduce((s, a) => s + a.valorInvestido, 0);
 
-export const rendaMes = (assets: Asset[], mes: string) =>
-  assets.reduce((s, a) => s + (a.historico.find((h) => h.mes === mes)?.valor ?? 0), 0);
+export const rendaMes = (assets: Asset[], mes: string) => assets.reduce((s, a) => s + rendaAtivoMes(a, mes), 0);
 
 export type IncomeRow = { mes: string; total: number } & Record<AssetType, number>;
 
-export function rendaPorTipo(assets: Asset[], meses = MESES_HISTORICO): IncomeRow[] {
+export function rendaPorTipo(assets: Asset[], meses: Meses = MESES_HISTORICO): IncomeRow[] {
   return meses.map((mes) => {
     const row = { mes, total: 0, charge: 0, tank: 0, capaxero: 0, solar: 0 } as IncomeRow;
     for (const a of assets) {
-      const v = a.historico.find((h) => h.mes === mes)?.valor ?? 0;
+      const v = rendaAtivoMes(a, mes);
       row[a.tipo] += v;
       row.total += v;
     }
@@ -30,7 +54,7 @@ export function rendaPorTipo(assets: Asset[], meses = MESES_HISTORICO): IncomeRo
 export function resumo(assets: Asset[]) {
   const mes = ULTIMO_MES_FECHADO;
   const anterior = addMonths(mes, -1);
-  const doze = MESES_HISTORICO.slice(-12);
+  const doze = ULTIMOS_12;
   const patrimonio = investidoEm(assets, mes);
   const rendaAtual = rendaMes(assets, mes);
   const rendaAnterior = rendaMes(assets, anterior);
@@ -59,49 +83,31 @@ export function composicao(assets: Asset[]) {
   }).filter((c) => c.valor > 0);
 }
 
-export type SerieKey = "dono" | "cdi" | "selic" | "poupanca" | "ibovespa" | "btc" | "eth";
+/** Séries de mercado comparadas com a carteira (renda fixa de referência + bolsa brasileira). */
+export const MERCADO_KEYS = ["cdi", "selic", "poupanca", "itub4", "bbas3"] as const;
+export type MercadoKey = (typeof MERCADO_KEYS)[number];
+export type SerieKey = "dono" | MercadoKey;
 export type IndexRow = { mes: string } & Record<SerieKey, number>;
 
-export function retornosDono(assets: Asset[], meses: string[]) {
+export function retornosDono(assets: Asset[], meses: Meses) {
   return meses.map((m) => (rendaMes(assets, m) / (investidoOperando(assets, m) || 1)) * 100);
 }
 
-export function retornosMercado(market: MarketMonth[], meses: string[], key: Exclude<SerieKey, "dono">) {
+export function retornosMercado(market: MarketMonth[], meses: Meses, key: MercadoKey) {
   return meses.map((m) => market.find((x) => x.mes === m)?.[key] ?? 0);
 }
 
-export function indiceBase100(market: MarketMonth[], assets: Asset[], meses: string[]): IndexRow[] {
+export function indiceBase100(market: MarketMonth[], assets: Asset[], meses: Meses): IndexRow[] {
   const dono = retornosDono(assets, meses);
-  const acc: Record<SerieKey, number> = {
-    dono: 100,
-    cdi: 100,
-    selic: 100,
-    poupanca: 100,
-    ibovespa: 100,
-    btc: 100,
-    eth: 100,
-  };
+  const keys: SerieKey[] = ["dono", ...MERCADO_KEYS];
+  const acc = Object.fromEntries(keys.map((k) => [k, 100])) as Record<SerieKey, number>;
   const rows: IndexRow[] = [{ mes: addMonths(meses[0], -1), ...acc }];
   meses.forEach((mes, i) => {
     const mk = market.find((x) => x.mes === mes);
     if (!mk) return;
     acc.dono *= 1 + dono[i] / 100;
-    acc.cdi *= 1 + mk.cdi / 100;
-    acc.selic *= 1 + mk.selic / 100;
-    acc.poupanca *= 1 + mk.poupanca / 100;
-    acc.ibovespa *= 1 + mk.ibovespa / 100;
-    acc.btc *= 1 + (mk.btc ?? 0) / 100;
-    acc.eth *= 1 + (mk.eth ?? 0) / 100;
-    rows.push({
-      mes,
-      dono: +acc.dono.toFixed(2),
-      cdi: +acc.cdi.toFixed(2),
-      selic: +acc.selic.toFixed(2),
-      poupanca: +acc.poupanca.toFixed(2),
-      ibovespa: +acc.ibovespa.toFixed(2),
-      btc: +acc.btc.toFixed(2),
-      eth: +acc.eth.toFixed(2),
-    });
+    for (const k of MERCADO_KEYS) acc[k] *= 1 + mk[k] / 100;
+    rows.push({ mes, ...(Object.fromEntries(keys.map((k) => [k, +acc[k].toFixed(2)])) as Record<SerieKey, number>) });
   });
   return rows;
 }

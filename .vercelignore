@@ -1,0 +1,7 @@
+.claude
+.wrangler
+.open-next
+.next
+node_modules
+*.pdf
+*.tsbuildinfo

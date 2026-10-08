@@ -11,7 +11,7 @@ export default async function ComparadorPage() {
     <>
       <PageHeader
         title="Comparador"
-        description="Acompanhe o rendimento mensal da Carteira DONO e compare a performance com CDI, Taxa Selic, Poupança, Ibovespa, Bitcoin e Ethereum."
+        description="Acompanhe o rendimento mensal da Carteira DONO e compare a performance com CDI, Tesouro Selic, Poupança e as ações do Itaú e do Banco do Brasil."
       />
       <Comparator assets={assets} market={market} />
     </>

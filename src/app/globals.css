@@ -1,35 +1,39 @@
 @import "tailwindcss";
 
 @theme {
-  /* Paleta institucional azul-profissional (padrão grandes corretoras) */
-  --color-crp-navy-deep: #060b1f;
-  --color-crp-navy: #0a1128;
-  --color-crp-surface: #101a3c;
-  --color-crp-surface-2: #16224b;
-  --color-crp-line: #263262;
-  --color-crp-light: #f3f6fc;
-  --color-crp-blue: #0e5df2;
-  --color-crp-blue-hover: #2e78ff;
-  --color-crp-blue-bright: #8ab4ff;
-  --color-crp-gold: #eac26e;
+  /* Identidade DONO (manual "23-09 LOGOTIPO DONO"): azul da marca, base escura,
+     violeta de apoio e fundo claro. Os demais tons derivam destes quatro. */
+  --color-dono-blue: #27aae1; /* azul da marca: logotipo, presença, botões (com texto escuro) */
+  --color-dono-blue-hover: #4cbbe8;
+  --color-dono-blue-bright: #6cc7ee; /* azul como texto/estado sobre fundo escuro */
+  --color-dono-violet: #482b74; /* violeta de apoio: só ambientação, nunca texto */
+  --color-dono-deep: #0b0c12;
+  --color-dono-base: #11131b; /* base escura */
+  --color-dono-surface: #181b25;
+  --color-dono-surface-2: #20242f;
+  --color-dono-line: #2c3140;
+  --color-dono-paper: #f6f5f2; /* fundo claro */
+  --color-dono-blue-ink: #0a74a6; /* azul para TEXTO sobre fundo claro (4,7:1); o oficial dá 2,4:1 */
   --color-ink: #ffffff;
-  --color-ink-muted: #c9d2e9;
-  --color-ink-subtle: #909bc3;
-  --color-ink-dark: #0b1230;
-  --color-ink-dark-muted: #4e5a7e;
-  --color-positive: #0ecb81;
-  --color-negative: #ff5c5c;
-  --color-cat-charge: #22a7c4;
-  --color-cat-tank: #9862f0;
-  --color-cat-capaxero: #f0619d;
-  --color-cat-solar: #e0a32e;
+  --color-ink-muted: #c8cad6;
+  --color-ink-subtle: #8d91a3;
+  --color-ink-dark: #11131b;
+  --color-ink-dark-muted: #4a4e5c;
+  --color-positive: #2fd18d;
+  --color-negative: #ff6b6b;
 
-  --radius-pill: 40px;
-  --radius-card: 16px;
+  /* Texto sobre o azul da marca: escuro (7:1). Branco sobre o azul dá só 2,6:1. */
+  --color-on-accent: #11131b;
 
-  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  /* Estrutura: cantos contidos, sem pílulas arredondadas demais */
+  --radius-pill: 10px;
+  --radius-card: 14px;
 
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-archivo), var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+
+  /* Curva forte de saída (Emil Kowalski). Espelha EASE_OUT em motion/tokens.ts */
+  --ease-out-expo: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 @layer base {
@@ -45,8 +49,9 @@
   }
   body {
     background:
-      radial-gradient(1100px 480px at 50% -200px, color-mix(in srgb, var(--color-crp-blue) 13%, transparent), transparent 72%),
-      var(--color-crp-navy);
+      radial-gradient(900px 520px at 85% -180px, color-mix(in srgb, var(--color-dono-violet) 38%, transparent), transparent 70%),
+      radial-gradient(900px 420px at 10% -220px, color-mix(in srgb, var(--color-dono-blue) 12%, transparent), transparent 72%),
+      var(--color-dono-base);
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -59,14 +64,14 @@
     }
   }
   ::selection {
-    background: color-mix(in srgb, var(--color-crp-blue) 80%, transparent);
-    color: var(--color-ink);
+    background: var(--color-dono-blue);
+    color: var(--color-on-accent);
   }
   input, textarea {
-    caret-color: var(--color-crp-blue-bright);
+    caret-color: var(--color-dono-blue-bright);
   }
   :focus-visible {
-    outline: 2px solid var(--color-crp-blue-bright);
+    outline: 2px solid var(--color-dono-blue-bright);
     outline-offset: 2px;
     border-radius: 6px;
   }
@@ -75,20 +80,30 @@
   }
   h1, h2, h3 {
     text-wrap: balance;
-    letter-spacing: -0.025em;
+    letter-spacing: -0.02em;
+  }
+  h1 {
+    font-family: var(--font-display);
   }
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--color-crp-line) transparent;
+    scrollbar-color: var(--color-dono-line) transparent;
   }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-thumb {
-    background: var(--color-crp-line);
+    background: var(--color-dono-line);
     border-radius: 10px;
     border: 3px solid transparent;
     background-clip: padding-box;
   }
   ::-webkit-scrollbar-track { background: transparent; }
+}
+
+/* Tipografia de display: Archivo larga, a alternativa livre mais próxima da Downey
+   (sem serifa, traço robusto, desenho amplo). A Downey fica restrita ao logotipo em SVG. */
+h1,
+.font-display {
+  font-stretch: 122%;
 }
 
 @utility num {
@@ -98,92 +113,274 @@
 
 /* Cartão elevado padrão da plataforma */
 @utility card-elev {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-crp-surface-2) 30%, var(--color-crp-surface)), var(--color-crp-surface));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.055),
-    0 20px 44px -28px rgba(2, 6, 22, 0.95);
-  outline: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  outline: 1px solid var(--card-outline);
   outline-offset: -1px;
 }
 
-/* Reveal ao rolar: elementos com [data-reveal] sobem suavemente ao entrar na tela */
-@media (prefers-reduced-motion: no-preference) {
-  [data-reveal] {
-    opacity: 0;
-    transform: translateY(26px);
-    transition:
-      opacity 720ms var(--ease-out-expo),
-      transform 720ms var(--ease-out-expo);
-    transition-delay: var(--reveal-delay, 0ms);
-  }
-  [data-reveal].is-visible {
-    opacity: 1;
-    transform: none;
-  }
+/* ---------- Temas ----------
+   Padrão do site: escuro (base #11131B). A área logada usa .theme-light (fundo claro #F6F5F2):
+   em vez de reescrever cada classe, o escopo redefine os tokens. Como "white" vira a tinta
+   escura, todo overlay bg-white/[x] vira um tom de tinta sobre o claro. .theme-dark restaura
+   o escuro dentro do tema claro (capa com foto do ativo, destaque do comparador). */
+:root {
+  --card-bg: linear-gradient(180deg, color-mix(in srgb, var(--color-dono-surface-2) 35%, var(--color-dono-surface)), var(--color-dono-surface));
+  --card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 20px 44px -28px rgba(5, 6, 10, 0.9);
+  --card-outline: rgba(255, 255, 255, 0.07);
+  --chart-axis: #8d91a3;
+  --chart-grid: rgba(141, 145, 163, 0.16);
+  --chart-cursor: rgba(255, 255, 255, 0.05);
+  --chart-cursor-line: rgba(255, 255, 255, 0.3);
+  --chart-ref: rgba(255, 255, 255, 0.22);
+  --chart-sep: #181b25;
+  --chart-dot: #11131b;
+  --medal-1: #eac26e;
+  --medal-2: #b7c0dc;
+  --medal-3: #d1936b;
+}
+.theme-light {
+  color-scheme: light;
+  --color-dono-deep: #ffffff;
+  --color-dono-base: #f6f5f2;
+  --color-dono-surface: #ffffff;
+  --color-dono-surface-2: #ffffff;
+  --color-dono-line: #dcdad3;
+  --color-white: #11131b;
+  --color-ink: #11131b;
+  --color-ink-muted: #3d404c;
+  --color-ink-subtle: #5f6271;
+  --color-ink-dark: #ffffff;
+  --color-ink-dark-muted: #e7e5df;
+  --color-dono-blue-bright: #0a74a6; /* azul legível sobre o claro (4,7:1) */
+  --color-positive: #077a50;
+  --color-negative: #c92a2a;
+  --card-bg: #ffffff;
+  --card-shadow: 0 1px 2px rgba(17, 19, 27, 0.04), 0 12px 28px -16px rgba(17, 19, 27, 0.14);
+  --card-outline: rgba(17, 19, 27, 0.08);
+  --chart-axis: #5f6271;
+  --chart-grid: rgba(17, 19, 27, 0.08);
+  --chart-cursor: rgba(39, 170, 225, 0.08);
+  --chart-cursor-line: rgba(17, 19, 27, 0.25);
+  --chart-ref: rgba(17, 19, 27, 0.25);
+  --chart-sep: #ffffff;
+  --chart-dot: #ffffff;
+  --medal-1: #94600f;
+  --medal-2: #64708f;
+  --medal-3: #a8643a;
+  background-color: var(--color-dono-base);
+  color: var(--color-ink);
+}
+.theme-light .theme-dark,
+.theme-dark {
+  color-scheme: dark;
+  --color-dono-deep: #0b0c12;
+  --color-dono-base: #11131b;
+  --color-dono-surface: #181b25;
+  --color-dono-surface-2: #20242f;
+  --color-dono-line: #2c3140;
+  --color-white: #ffffff;
+  --color-ink: #ffffff;
+  --color-ink-muted: #c8cad6;
+  --color-ink-subtle: #8d91a3;
+  --color-ink-dark: #11131b;
+  --color-ink-dark-muted: #4a4e5c;
+  --color-dono-blue-bright: #6cc7ee;
+  --color-positive: #2fd18d;
+  --color-negative: #ff6b6b;
+  --card-bg: linear-gradient(180deg, color-mix(in srgb, var(--color-dono-surface-2) 35%, var(--color-dono-surface)), var(--color-dono-surface));
+  --card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 20px 44px -28px rgba(5, 6, 10, 0.9);
+  --card-outline: rgba(255, 255, 255, 0.07);
+  --medal-1: #eac26e;
+  --medal-2: #b7c0dc;
+  --medal-3: #d1936b;
+  color: var(--color-ink);
+}
+/* Rolagem elástica e barras do navegador acompanham o tema da área logada */
+html:has(.theme-light) {
+  color-scheme: light;
+}
+body:has(.theme-light) {
+  background: #f6f5f2;
+}
 
-  /* Entrada da folha de login */
-  .sheet-in {
-    animation: sheet-in 640ms var(--ease-out-expo) both;
+/* Placeholder de carregamento: mesmo raio e tom dos cartões, com brilho discreto */
+@utility skeleton {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-white) 4%, transparent) 0%,
+    color-mix(in srgb, var(--color-white) 8.5%, transparent) 40%,
+    color-mix(in srgb, var(--color-white) 4%, transparent) 80%
+  );
+  background-size: 300% 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 100% 0;
   }
-  @keyframes sheet-in {
+  to {
+    background-position: -50% 0;
+  }
+}
+
+/* ---------- Hero: entrada guiada por CSS ----------
+   Roda fora da thread principal e já no primeiro quadro, sem esperar hidratação.
+   Enquanto a intro de marca toca (html[data-intro="play"]) a entrada fica pausada
+   no estado inicial e dispara sozinha quando o atributo é removido. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-hero-in] {
+    animation: hero-in 720ms var(--ease-out-expo) both;
+    animation-delay: var(--d, 0ms);
+  }
+  [data-hero-word] {
+    animation: word-up 760ms var(--ease-out-expo) both;
+    animation-delay: calc(var(--i, 0) * 55ms + var(--d, 0ms));
+  }
+  html[data-intro="play"] [data-hero-in],
+  html[data-intro="play"] [data-hero-word] {
+    animation-play-state: paused;
+  }
+  @keyframes hero-in {
     from {
       opacity: 0;
-      transform: translateY(34px);
+      transform: translateY(18px);
     }
     to {
       opacity: 1;
       transform: none;
     }
   }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  @keyframes word-up {
+    from {
+      transform: translateY(108%);
+    }
+    to {
+      transform: none;
+    }
   }
 }
 
-.product-stage {
-  perspective: 1600px;
+/* Máscara de palavra: o recorte esconde a palavra subindo; o respiro evita cortar descendentes */
+.word-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-block: 0.06em 0.14em;
+  margin-block: -0.06em -0.14em;
+}
+.word-mask > [data-hero-word] {
+  display: inline-block;
 }
 
-@supports (animation-timeline: view()) {
-  /* Animações guiadas por scroll com filter são caras: só em telas grandes,
-     onde não derrubam a resolução de rasterização do navegador mobile */
-  @media (prefers-reduced-motion: no-preference) and (min-width: 1024px) {
-    .product-frame {
-      transform-origin: 50% 0%;
-      animation: settle linear both;
-      animation-timeline: view();
-      animation-range: entry 0% cover 45%;
-    }
-    @keyframes settle {
-      from {
-        transform: rotateX(22deg) scale(0.9) translateY(40px);
-        filter: brightness(0.55);
-      }
-      to {
-        transform: none;
-        filter: none;
-      }
-    }
-
-    .asset-card {
-      animation: card-rise 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 40%;
-    }
-    @keyframes card-rise {
-      from {
-        opacity: 0;
-        transform: translateY(28px);
-      }
-      to {
-        opacity: 1;
-        transform: none;
-      }
-    }
+/* ---------- Intro de marca: Club Renda Passiva vira DONO ----------
+   Escala de z: cabeçalho 50, intro 100. O script do <head> liga data-intro="play". */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+}
+html[data-intro="play"] .intro {
+  display: block;
+  /* Rede de segurança: se o JS não carregar, a intro some sozinha */
+  animation: intro-failsafe 0s linear 7s forwards;
+}
+@keyframes intro-failsafe {
+  to {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+html[data-intro="play"] [data-site-logo] {
+  visibility: hidden;
+}
+.intro-bg {
+  position: absolute;
+  inset: 0;
+  /* Ambientação das aplicações do manual: base escura com luz violeta e azul */
+  background:
+    radial-gradient(60% 50% at 78% 18%, color-mix(in srgb, var(--color-dono-violet) 55%, transparent), transparent 70%),
+    radial-gradient(50% 45% at 18% 88%, color-mix(in srgb, var(--color-dono-blue) 16%, transparent), transparent 70%),
+    var(--color-dono-base);
+}
+.intro-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  overflow: hidden;
+  pointer-events: none;
+}
+/* Nome antigo e logotipo novo ocupam a mesma célula do grid, centrados. */
+.intro-old,
+.intro-mark-wrap {
+  grid-area: 1 / 1;
+}
+.intro-old {
+  font-family: var(--font-display);
+  font-stretch: 122%;
+  font-weight: 700;
+  font-size: clamp(26px, 6.4vw, 68px);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--color-ink);
+  opacity: 0; /* revelado pelo JS só depois de quebrar em letras */
+}
+/* O voo até o cabeçalho anima o wrapper: em um <svg>, x/y viram atributos e não translação. */
+.intro-mark-wrap {
+  width: min(78vw, 720px);
+  transform-origin: 0 0;
+}
+.intro-mark {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  fill: var(--color-dono-blue);
+}
+/* Cada parte do logotipo começa invisível; os prolongamentos do N crescem a partir da linha. */
+.intro-mark path {
+  opacity: 0;
+  transform-box: fill-box;
+}
+.intro-mark [data-part="Ntop"] {
+  transform-origin: 50% 100%;
+}
+.intro-mark [data-part="Nbottom"] {
+  transform-origin: 50% 0%;
+}
+.intro-tag {
+  position: absolute;
+  inset-inline: 0;
+  /* logo tem min(78vw, 720px) de largura e proporção 3,618:1; a assinatura fica logo abaixo */
+  top: calc(50% + min(78vw, 720px) / 7.236 + 32px);
+  text-align: center;
+  font-size: clamp(15px, 2.4vw, 20px);
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  opacity: 0;
+  pointer-events: none;
+}
+.intro-skip {
+  position: absolute;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: 0.75rem;
+  min-height: 44px;
+  padding-inline: 1rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-ink-muted);
+  transition:
+    background-color 160ms var(--ease-out-expo),
+    color 160ms var(--ease-out-expo);
+}
+@media (hover: hover) and (pointer: fine) {
+  .intro-skip:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--color-ink);
   }
 }

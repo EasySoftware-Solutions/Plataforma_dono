@@ -3,13 +3,13 @@ import { api } from "@/lib/api";
 import { getSession } from "@/lib/auth";
 import { ULTIMO_MES_FECHADO } from "@/lib/constants";
 import { mesLongo } from "@/lib/format";
-import { AssetList, IncomePanel, PortfolioSummary, RecentPayments, TopPerformers } from "@/components/dashboard/overview";
+import { AssetList, IncomePanel, PortfolioSummary, TopPerformers } from "@/components/dashboard/overview";
 import { PageHeader } from "@/components/ui/panel";
 
 export const metadata: Metadata = { title: "Visão geral" };
 
 export default async function DashboardPage() {
-  const [session, assets, payments] = await Promise.all([getSession(), api.getAssets(), api.getPayments()]);
+  const [session, assets] = await Promise.all([getSession(), api.getAssets()]);
   const primeiroNome = session?.nome.split(" ")[0] ?? "investidor";
 
   return (
@@ -19,10 +19,7 @@ export default async function DashboardPage() {
         <PortfolioSummary assets={assets} />
         <IncomePanel assets={assets} />
         <TopPerformers assets={assets} />
-        <div className="grid gap-4 xl:grid-cols-[1.35fr_1fr]">
-          <AssetList assets={assets} />
-          <RecentPayments assets={assets} payments={payments} />
-        </div>
+        <AssetList assets={assets} />
       </div>
     </>
   );

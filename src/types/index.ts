@@ -1,6 +1,5 @@
 export type AssetType = "charge" | "tank" | "capaxero" | "solar";
 export type AssetStatus = "ativo" | "implantacao" | "manutencao";
-export type PaymentStatus = "pago" | "processando" | "pendente" | "atrasado";
 
 export interface MonthlyIncome {
   mes: string;
@@ -32,29 +31,18 @@ export interface Asset {
   documentos: AssetDocument[];
 }
 
-export interface Payment {
-  id: string;
-  assetId: string;
-  competencia: string;
-  data: string;
-  valor: number;
-  status: PaymentStatus;
-  previsto?: boolean;
-}
-
 export interface MarketMonth {
   mes: string;
   cdi: number;
   selic: number;
   poupanca: number;
-  ibovespa: number;
-  btc?: number;
-  eth?: number;
+  itub4: number;
+  bbas3: number;
 }
 
 export interface Notice {
   id: string;
-  tipo: "pagamento" | "relatorio" | "ativo";
+  tipo: "relatorio" | "ativo";
   titulo: string;
   detalhe: string;
   data: string;
@@ -66,10 +54,3 @@ export interface Investor {
   email: string;
 }
 
-export interface BankAccount {
-  banco: string;
-  agencia: string;
-  conta: string;
-  titular: string;
-  pix: string;
-}

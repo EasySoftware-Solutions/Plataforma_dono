@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-
-const SESSION_COOKIE = "dono_session";
+import { SESSION_COOKIE } from "@/lib/routes";
 
 export function middleware(req: NextRequest) {
   if (req.cookies.get(SESSION_COOKIE)) return NextResponse.next();
@@ -9,6 +8,7 @@ export function middleware(req: NextRequest) {
   return NextResponse.redirect(url);
 }
 
+// O matcher precisa ser literal (analisado em build); mantenha em sincronia com PROTECTED_ROUTES.
 export const config = {
-  matcher: ["/dashboard/:path*", "/ativos/:path*", "/comparador/:path*", "/relatorios/:path*", "/pagamentos/:path*"],
+  matcher: ["/dashboard/:path*", "/ativos/:path*", "/comparador/:path*", "/relatorios/:path*"],
 };

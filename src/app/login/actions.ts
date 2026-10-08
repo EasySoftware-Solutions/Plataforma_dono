@@ -3,10 +3,9 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { encodeSession, SESSION_COOKIE } from "@/lib/auth";
+import { destinoPosLogin } from "@/lib/routes";
 
 export type LoginState = { error?: string; email?: string };
-
-const ROTAS = ["/dashboard", "/ativos", "/comparador", "/relatorios", "/pagamentos"];
 
 export async function login(_: LoginState, form: FormData): Promise<LoginState> {
   const email = String(form.get("email") ?? "").trim().toLowerCase();
@@ -22,7 +21,7 @@ export async function login(_: LoginState, form: FormData): Promise<LoginState> 
     path: "/",
     maxAge: 60 * 60 * 8,
   });
-  redirect(ROTAS.some((r) => voltar.startsWith(r)) ? voltar : "/dashboard");
+  redirect(destinoPosLogin(voltar));
 }
 
 export async function logout() {

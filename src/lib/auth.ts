@@ -1,19 +1,18 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import type { Investor } from "@/types";
 import { DEMO_INVESTOR } from "./mock-data";
+import { SESSION_COOKIE } from "./routes";
 
-export const SESSION_COOKIE = "dono_session";
+export { SESSION_COOKIE };
 
-function nomeDoEmail(email: string) {
-  const base = email.split("@")[0].replace(/[._-]+/g, " ").replace(/\d+/g, "").trim();
-  return base ? base.replace(/(^|\s)\S/g, (c) => c.toUpperCase()) : DEMO_INVESTOR.nome;
-}
-
+// A carteira de demonstração é a do cliente Magno: qualquer login entra como ele.
 export function encodeSession(email: string) {
-  return Buffer.from(JSON.stringify({ email, nome: nomeDoEmail(email) })).toString("base64url");
+  return Buffer.from(JSON.stringify({ email, nome: DEMO_INVESTOR.nome })).toString("base64url");
 }
 
-export async function getSession(): Promise<Investor | null> {
+// Memoizado por request: layout e páginas leem a sessão sem decodificar o cookie de novo.
+export const getSession = cache(async (): Promise<Investor | null> => {
   const raw = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!raw) return null;
   try {
@@ -21,4 +20,4 @@ export async function getSession(): Promise<Investor | null> {
   } catch {
     return null;
   }
-}
+});

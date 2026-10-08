@@ -4,16 +4,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, MapPin } from "lucide-react";
 import { api } from "@/lib/api";
-import { ASSETS, MESES_HISTORICO } from "@/lib/mock-data";
-import { TIPOS } from "@/lib/constants";
-import { brl, data, mesLongo, mesNome, pct } from "@/lib/format";
+import { desempenhoAtivo } from "@/lib/calc";
+import { TIPOS, ULTIMOS_12 } from "@/lib/constants";
+import { brl, data, mesLongo, pct } from "@/lib/format";
 import { AssetBars } from "@/components/charts/asset-bars";
 import { EmptyState, Panel } from "@/components/ui/panel";
-import { AssetStatusBadge, PaymentStatusBadge } from "@/components/ui/status";
+import { AssetStatusBadge } from "@/components/ui/status";
 import { Documents } from "./documents";
 
-export function generateStaticParams() {
-  return ASSETS.map((a) => ({ id: a.id }));
+export async function generateStaticParams() {
+  return (await api.getAssets()).map((a) => ({ id: a.id }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -23,16 +23,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function AtivoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [asset, payments] = await Promise.all([api.getAsset(id), api.getPayments()]);
+  const asset = await api.getAsset(id);
   if (!asset) notFound();
 
   const tipo = TIPOS[asset.tipo];
   const recebido = asset.historico.reduce((s, h) => s + h.valor, 0);
-  const doze = asset.historico.filter((h) => MESES_HISTORICO.slice(-12).includes(h.mes) && h.valor > 0);
-  const media12 = doze.length ? doze.reduce((s, h) => s + h.valor, 0) / doze.length : 0;
+  const { mediaMensal: media12 } = desempenhoAtivo(asset, ULTIMOS_12);
   const desde = asset.historico.findIndex((h) => h.valor > 0);
   const serie = desde >= 0 ? asset.historico.slice(desde) : [];
-  const pagamentos = payments.filter((p) => p.assetId === asset.id).slice(0, 8);
   const maps = `https://www.google.com/maps/search/?api=1&query=${asset.coordenadas.lat},${asset.coordenadas.lng}`;
 
   return (
@@ -42,7 +40,7 @@ export default async function AtivoPage({ params }: { params: Promise<{ id: stri
         Meus ativos
       </Link>
 
-      <section className="relative overflow-hidden rounded-card bg-crp-navy-deep">
+      <section className="theme-dark relative overflow-hidden rounded-card bg-dono-deep">
         <Image src={tipo.imagem} alt="" fill sizes="(min-width: 1280px) 1200px, 100vw" style={{ objectPosition: tipo.foco }} className="object-cover opacity-80" priority />
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/85 to-black/10" />
         <div className="relative px-6 py-10 sm:px-10 sm:py-14">
@@ -63,8 +61,8 @@ export default async function AtivoPage({ params }: { params: Promise<{ id: stri
         {[
           { k: "Valor investido", v: brl(asset.valorInvestido) },
           { k: "Rendimento recebido", v: brl(recebido), s: `desde ${mesLongo(serie[0]?.mes ?? asset.inicioOperacao)}` },
-          { k: "Média mensal em 12 meses", v: media12 ? brl(media12) : "—" },
-          { k: "Rentabilidade média mensal", v: media12 ? pct((media12 / asset.valorInvestido) * 100) : "—", s: `referência contratada ${pct(asset.yieldReferencia)}` },
+          { k: "Média mensal em 12 meses", v: media12 ? brl(media12) : "-" },
+          { k: "Rentabilidade média mensal", v: media12 ? pct((media12 / asset.valorInvestido) * 100) : "-", s: `referência contratada ${pct(asset.yieldReferencia)}` },
         ].map((m) => (
           <div key={m.k} className="card-elev rounded-card p-5">
             <dt className="text-sm text-ink-subtle">{m.k}</dt>
@@ -80,7 +78,7 @@ export default async function AtivoPage({ params }: { params: Promise<{ id: stri
             <AssetBars data={serie} color={tipo.cor} invested={asset.valorInvestido} />
           ) : (
             <EmptyState title="Ainda sem rendimentos">
-              Este ativo está em implantação. O primeiro repasse vem depois do início da operação, previsto para {mesLongo(asset.inicioOperacao)}.
+              Este ativo está em implantação. O primeiro rendimento vem depois do início da operação, previsto para {mesLongo(asset.inicioOperacao)}.
             </EmptyState>
           )}
         </Panel>
@@ -99,37 +97,15 @@ export default async function AtivoPage({ params }: { params: Promise<{ id: stri
               </div>
             ))}
           </dl>
-          <a href={maps} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink hover:text-crp-blue-bright">
+          <a href={maps} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink hover:text-dono-blue-bright">
             Ver localização no mapa <ExternalLink aria-hidden className="size-3.5" />
           </a>
         </Panel>
       </div>
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-2">
-        <Panel title="Pagamentos deste ativo">
-          {pagamentos.length ? (
-            <ul className="divide-y divide-white/[0.06]">
-              {pagamentos.map((p) => (
-                <li key={p.id} className="flex items-center justify-between gap-3 py-3">
-                  <span>
-                    <span className="block text-sm font-semibold text-ink">Referente a {mesNome(p.competencia)}</span>
-                    <span className="block text-sm text-ink-subtle">{data(p.data)}</span>
-                  </span>
-                  <span className="flex items-center gap-3">
-                    <PaymentStatusBadge status={p.status} previsto={p.previsto} />
-                    <span className="num w-24 text-right text-sm font-semibold text-ink">{brl(p.valor)}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <EmptyState title="Nenhum pagamento ainda">Os repasses aparecem aqui assim que o ativo começar a operar.</EmptyState>
-          )}
-        </Panel>
-        <Panel title="Documentos">
-          <Documents asset={asset} />
-        </Panel>
-      </div>
+      <Panel title="Documentos" className="mt-4">
+        <Documents asset={asset} />
+      </Panel>
     </>
   );
 }
