@@ -8,6 +8,7 @@ export const brl = (v: number) => brlFmt.format(v);
 export const brlCompact = (v: number) => brlCompactFmt.format(v);
 
 export function pct(v: number, { digits = 2, sign = false } = {}) {
+  if (!Number.isFinite(v)) return "-";
   const s = v.toLocaleString("pt-BR", { minimumFractionDigits: digits, maximumFractionDigits: digits });
   return `${sign && v > 0 ? "+" : ""}${s}%`;
 }

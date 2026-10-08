@@ -16,8 +16,10 @@
 //  - FRACAO_CLIENTE: definido em 1 a pedido do investidor — a plataforma exibe o líquido
 //    COMPLETO de cada usina, sem dividir a "fração 1/3" dos sócios do demonstrativo.
 //  - Datas de aquisição, cidade/UF e coordenadas.
+//  - Eletropostos CRP Charge 60kW e 22kW (Eletroposto 2000, Cedro/CE): valorInvestido
+//    PENDENTE (R$ 0 até o investidor informar), datas provisórias e previsão de operação.
 //  - Documentos e avisos.
-import type { Asset, Investor, MonthlyIncome, Notice } from "@/types";
+import type { Asset, AssetType, Investor, MonthlyIncome, Notice } from "@/types";
 import { MESES_HISTORICO, ULTIMO_MES_FECHADO } from "./constants";
 
 /** Fração do líquido da usina exibida na plataforma (1 = líquido completo). */
@@ -71,6 +73,7 @@ const LIQUIDO_NB2: Record<string, number> = {
 
 interface Seed {
   id: string;
+  tipo: AssetType;
   nome: string;
   cidade: string;
   uf: string;
@@ -86,6 +89,7 @@ interface Seed {
 const SEEDS: Seed[] = [
   {
     id: "nb1",
+    tipo: "solar",
     nome: "Usina NB1",
     cidade: "Montes Claros",
     uf: "MG",
@@ -107,6 +111,7 @@ const SEEDS: Seed[] = [
   },
   {
     id: "nb2",
+    tipo: "solar",
     nome: "Usina NB2",
     cidade: "Janaúba",
     uf: "MG",
@@ -126,6 +131,46 @@ const SEEDS: Seed[] = [
     ],
     coordenadas: { lat: -15.8029, lng: -43.3094 },
   },
+  {
+    id: "charge-60kw",
+    tipo: "charge",
+    nome: "CRP Charge 60kW",
+    cidade: "Cedro",
+    uf: "CE",
+    dataAquisicao: "2026-08-01",
+    inicioOperacao: "2026-12",
+    valorInvestido: 0,
+    liquido: {},
+    descricao: "Eletroposto de recarga rápida em construção no Eletroposto 2000. A receita virá da recarga de veículos elétricos assim que o ativo entrar em operação.",
+    especificacoes: [
+      { rotulo: "Local", valor: "Eletroposto 2000 — Cedro/CE" },
+      { rotulo: "Potência", valor: "60 kW (DC, recarga rápida)" },
+      { rotulo: "Situação", valor: "Em construção" },
+      { rotulo: "Previsão de operação", valor: "Dezembro de 2026" },
+      { rotulo: "Modelo de receita", valor: "Recarga de veículos elétricos" },
+    ],
+    coordenadas: { lat: -6.6006, lng: -39.0606 },
+  },
+  {
+    id: "charge-22kw",
+    tipo: "charge",
+    nome: "CRP Charge 22kW",
+    cidade: "Cedro",
+    uf: "CE",
+    dataAquisicao: "2026-08-01",
+    inicioOperacao: "2026-12",
+    valorInvestido: 0,
+    liquido: {},
+    descricao: "Eletroposto de recarga semi-rápida em construção no Eletroposto 2000. A receita virá da recarga de veículos elétricos assim que o ativo entrar em operação.",
+    especificacoes: [
+      { rotulo: "Local", valor: "Eletroposto 2000 — Cedro/CE" },
+      { rotulo: "Potência", valor: "22 kW (AC, recarga semi-rápida)" },
+      { rotulo: "Situação", valor: "Em construção" },
+      { rotulo: "Previsão de operação", valor: "Dezembro de 2026" },
+      { rotulo: "Modelo de receita", valor: "Recarga de veículos elétricos" },
+    ],
+    coordenadas: { lat: -6.6006, lng: -39.0606 },
+  },
 ];
 
 function historico(s: Seed): MonthlyIncome[] {
@@ -136,14 +181,14 @@ function historico(s: Seed): MonthlyIncome[] {
 function yieldReferencia(s: Seed, hist: MonthlyIncome[]) {
   const com = hist.filter((h) => h.valor > 0);
   const media = com.reduce((a, h) => a + h.valor, 0) / (com.length || 1);
-  return round((media / s.valorInvestido) * 100);
+  return round((media / (s.valorInvestido || 1)) * 100);
 }
 
 export const ASSETS: Asset[] = SEEDS.map((s) => {
   const hist = historico(s);
   return {
     id: s.id,
-    tipo: "solar",
+    tipo: s.tipo,
     nome: s.nome,
     cidade: s.cidade,
     uf: s.uf,
@@ -192,5 +237,13 @@ export const NOTICES: Notice[] = [
     detalhe: "O valor preliminar foi substituído pelo definitivo. Seus relatórios já usam o valor correto.",
     data: "2026-08-28",
     href: "/ativos/nb2",
+  },
+  {
+    id: "n5",
+    tipo: "ativo",
+    titulo: "Eletroposto 2000: dois carregadores em construção",
+    detalhe: "CRP Charge de 60 kW (DC) e 22 kW (AC) em Cedro/CE entram para a carteira. Os valores investidos serão lançados quando o contrato fechar.",
+    data: "2026-09-10",
+    href: "/ativos",
   },
 ];

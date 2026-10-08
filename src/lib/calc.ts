@@ -16,7 +16,7 @@ export function desempenhoAtivo(a: Asset, meses: Meses) {
   const renda = hist.reduce((s, h) => s + h.valor, 0);
   const mesesComRenda = hist.filter((h) => h.valor > 0).length;
   const mediaMensal = mesesComRenda ? renda / mesesComRenda : 0;
-  return { renda, mediaMensal, yieldMedio: (mediaMensal / a.valorInvestido) * 100 };
+  return { renda, mediaMensal, yieldMedio: (mediaMensal / (a.valorInvestido || 1)) * 100 };
 }
 
 export function maisRentaveis(assets: Asset[], n = 3, meses: Meses = ULTIMOS_12) {
