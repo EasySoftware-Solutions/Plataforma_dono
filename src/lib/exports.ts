@@ -1,5 +1,6 @@
 "use client";
 
+import { WORDMARK_PARTS } from "@/components/brand/wordmark";
 import { HOJE } from "./constants";
 import { dataLonga } from "./format";
 
@@ -16,13 +17,37 @@ export interface TableDoc {
   totais?: Cell[];
 }
 
-const AVISO = "Ambiente de demonstração: rendimentos e posições são fictícios. Rentabilidade passada não garante rentabilidade futura.";
+const AVISO = "Ambiente de demonstração: rendimentos e posições são mockados a partir de planilhas. Rentabilidade passada não garante rentabilidade futura.";
 
-const NAVY_DEEP: [number, number, number] = [13, 16, 55];
-const NAVY_INK: [number, number, number] = [16, 22, 49];
-const LIGHT_BG: [number, number, number] = [242, 245, 251];
-const BLUE: [number, number, number] = [50, 104, 222];
-const BLUE_BRIGHT: [number, number, number] = [48, 156, 252];
+// Paleta do manual da marca: base escura, fundo claro, azul da marca e violeta de apoio.
+const NAVY_DEEP: [number, number, number] = [17, 19, 27]; // #11131B
+const NAVY_INK: [number, number, number] = [17, 19, 27];
+const LIGHT_BG: [number, number, number] = [246, 245, 242]; // #F6F5F2
+const BLUE: [number, number, number] = [10, 116, 166]; // azul legível sobre claro (#0A74A6)
+const BLUE_BRIGHT: [number, number, number] = [39, 170, 225]; // #27AAE1
+const VIOLET: [number, number, number] = [72, 43, 116]; // #482B74
+
+// Desenha o logotipo vetorial (o mesmo SVG do site) com altura h, a partir do canto (x, y).
+// O path usa só M, L, C e Z; cada letra é preenchida com par-ímpar para manter os miolos dos O e do D.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function desenharLogo(pdf: any, x: number, y: number, h: number) {
+  const k = h / 367.74;
+  pdf.setFillColor(...BLUE_BRIGHT);
+  for (const d of Object.values(WORDMARK_PARTS)) {
+    const t = d.match(/[MLCZ]|-?\d*\.?\d+/g) ?? [];
+    let i = 0;
+    let cmd = "";
+    const n = () => Number(t[i++]);
+    while (i < t.length) {
+      if (/[MLCZ]/.test(t[i])) cmd = t[i++];
+      if (cmd === "M") pdf.moveTo(x + n() * k, y + n() * k);
+      else if (cmd === "L") pdf.lineTo(x + n() * k, y + n() * k);
+      else if (cmd === "C") pdf.curveTo(x + n() * k, y + n() * k, x + n() * k, y + n() * k, x + n() * k, y + n() * k);
+      else if (cmd === "Z") pdf.close();
+    }
+    pdf.fillEvenOdd();
+  }
+}
 
 function hexToRgb(hex: string): [number, number, number] {
   const n = parseInt(hex.replace("#", ""), 16);
@@ -64,14 +89,11 @@ export async function exportPdf(doc: TableDoc) {
   const H = pdf.internal.pageSize.getHeight();
   const M = 40;
 
-  pdf.setFillColor(13, 16, 55);
+  pdf.setFillColor(...NAVY_DEEP);
   pdf.rect(0, 0, W, 76, "F");
-  pdf.setTextColor(255, 255, 255);
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(20);
-  pdf.text("DONO", M, 46);
-  pdf.setFillColor(50, 104, 222);
-  pdf.rect(M + pdf.getTextWidth("DONO") + 3, 40, 5, 5, "F");
+  pdf.setFillColor(...VIOLET);
+  pdf.rect(0, 74, W, 2, "F");
+  desenharLogo(pdf, M, 26, 24);
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(9);
   pdf.setTextColor(184, 184, 184);
@@ -184,19 +206,15 @@ export async function exportRelatorioMensal(doc: MonthlyReportData) {
   // Cabeçalho
   pdf.setFillColor(...NAVY_DEEP);
   pdf.rect(0, 0, W, 118, "F");
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(15);
+  desenharLogo(pdf, M, 20, 18);
   pdf.setTextColor(255, 255, 255);
-  pdf.text("DONO", M, 34);
-  pdf.setFillColor(...BLUE);
-  pdf.rect(M + pdf.getTextWidth("DONO") + 3, 28, 4, 4, "F");
 
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(24);
   pdf.text("RELATÓRIO MENSAL", W / 2, 62, { align: "center" });
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(11);
-  pdf.setTextColor(160, 168, 202);
+  pdf.setTextColor(...BLUE_BRIGHT);
   pdf.text(doc.mesLabel.toUpperCase(), W / 2, 82, { align: "center" });
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(9.5);
@@ -340,12 +358,3 @@ export async function exportXlsx(doc: TableDoc) {
   await writeXlsxFile(data, { sheet: "DONO", columns: doc.colunas.map((c) => ({ width: c.width ?? 18 })) }).toFile(`${slug(doc.arquivo)}.xlsx`);
 }
 
-export function exportCsv(doc: TableDoc) {
-  const esc = (v: Cell) => {
-    const s = typeof v === "number" ? v.toLocaleString("pt-BR", { useGrouping: false, maximumFractionDigits: 2 }) : v;
-    return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-  };
-  const lines = [doc.colunas.map((c) => esc(c.header)).join(";"), ...doc.linhas.map((l) => l.map(esc).join(";"))];
-  if (doc.totais) lines.push(doc.totais.map(esc).join(";"));
-  save(new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" }), `${slug(doc.arquivo)}.csv`);
-}

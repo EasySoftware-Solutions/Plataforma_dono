@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { FileSpreadsheet, FileText, History, Loader2 } from "lucide-react";
-import type { Asset, Payment } from "@/types";
-import { composicao, investidoEm, rendaMes } from "@/lib/calc";
-import { HOJE, STATUS_PAGAMENTO, TIPOS, ULTIMO_MES_FECHADO } from "@/lib/constants";
-import { MESES_HISTORICO } from "@/lib/mock-data";
-import { brl, data, dataLonga, mesCurto, mesLongo, pct } from "@/lib/format";
+import type { Asset } from "@/types";
+import { composicao, desempenhoAtivo, investidoEm, rendaMes } from "@/lib/calc";
+import { HOJE, MESES_HISTORICO, TIPOS, ULTIMOS_12, ULTIMO_MES_FECHADO } from "@/lib/constants";
+import { brl, dataLonga, mesCurto, mesLongo, pct } from "@/lib/format";
 import { exportPdf, exportRelatorioMensal, exportXlsx, type TableDoc } from "@/lib/exports";
 import { EmptyState, Panel } from "@/components/ui/panel";
 
@@ -15,11 +14,12 @@ type Gerado = { id: string; titulo: string; formato: Formato; em: string };
 const STORAGE = "dono:relatorios";
 
 const selectCls =
-  "h-11 w-full rounded-xl bg-white/[0.06] px-3.5 text-sm font-semibold text-ink outline-none ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-crp-blue-bright sm:w-56";
+  "h-11 w-full rounded-xl bg-white/[0.06] px-3.5 text-sm font-semibold text-ink outline-none ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-dono-blue-bright sm:w-56";
 
-export function Reports({ assets, payments, investidor }: { assets: Asset[]; payments: Payment[]; investidor: string }) {
+export function Reports({ assets, investidor }: { assets: Asset[]; investidor: string }) {
   const mesesDesc = [...MESES_HISTORICO].reverse();
-  const anos = [...new Set(payments.filter((p) => !p.previsto && p.data <= HOJE).map((p) => p.data.slice(0, 4)))].sort().reverse();
+  // Anos com rendimento apurado na carteira (por competência), do mais recente ao mais antigo.
+  const anos = [...new Set(MESES_HISTORICO.filter((m) => rendaMes(assets, m) > 0).map((m) => m.slice(0, 4)))].sort().reverse();
   const operando = assets.filter((a) => a.historico.some((h) => h.valor > 0));
 
   const [mes, setMes] = useState(ULTIMO_MES_FECHADO);
@@ -40,8 +40,7 @@ export function Reports({ assets, payments, investidor }: { assets: Asset[]; pay
     const linhas = assets
       .map((a) => {
         const v = a.historico.find((h) => h.mes === mes)?.valor ?? 0;
-        const p = payments.find((x) => x.assetId === a.id && x.competencia === mes);
-        return { a, v, p };
+        return { a, v };
       })
       .filter((l) => l.v > 0);
     const total = linhas.reduce((s, l) => s + l.v, 0);
@@ -60,7 +59,6 @@ export function Reports({ assets, payments, investidor }: { assets: Asset[]; pay
         { header: "Investido", align: "right" },
         { header: "Rendimento", align: "right" },
         { header: "% no mês", align: "right" },
-        { header: "Pagamento", width: 22 },
       ],
       linhas: linhas.map((l) => [
         l.a.nome,
@@ -68,9 +66,8 @@ export function Reports({ assets, payments, investidor }: { assets: Asset[]; pay
         brl(l.a.valorInvestido),
         brl(l.v),
         pct((l.v / l.a.valorInvestido) * 100),
-        l.p ? `${STATUS_PAGAMENTO[l.p.status]} · ${data(l.p.data)}` : "—",
       ]),
-      totais: ["Total", "", "", brl(total), "", ""],
+      totais: ["Total", "", "", brl(total), ""],
     };
   }
 
@@ -97,29 +94,31 @@ export function Reports({ assets, payments, investidor }: { assets: Asset[]; pay
   }
 
   function docAnual(): TableDoc {
-    const pagos = payments.filter((p) => !p.previsto && p.status === "pago" && p.data.startsWith(ano));
+    // Rendimento apurado em cada mês do ano-calendário (competência), por ativo.
+    const doAno = (a: Asset) => a.historico.filter((h) => h.mes.startsWith(ano) && h.valor > 0);
     const porAtivo = assets
-      .map((a) => ({ a, v: pagos.filter((p) => p.assetId === a.id).reduce((s, p) => s + p.valor, 0), n: pagos.filter((p) => p.assetId === a.id).length }))
+      .map((a) => ({ a, v: doAno(a).reduce((s, h) => s + h.valor, 0), n: doAno(a).length }))
       .filter((x) => x.v > 0);
+    const meses = porAtivo.reduce((s, x) => s + x.n, 0);
     const total = porAtivo.reduce((s, x) => s + x.v, 0);
     const fimAno = `${ano}-12`;
     return {
       titulo: `Informe de rendimentos · ano-calendário ${ano}`,
-      subtitulo: "Valores pagos no ano. Confirme a natureza tributária de cada rendimento com seu contador.",
+      subtitulo: "Rendimento apurado em cada mês do ano. Confirme a natureza tributária de cada rendimento com seu contador.",
       arquivo: `dono-informe-rendimentos-${ano}`,
       resumo: [
-        { rotulo: `Rendimentos pagos em ${ano}`, valor: brl(total) },
+        { rotulo: `Rendimentos de ${ano}`, valor: brl(total) },
         { rotulo: `Posição em 31/12/${ano}`, valor: brl(investidoEm(assets, fimAno < ULTIMO_MES_FECHADO ? fimAno : ULTIMO_MES_FECHADO)) },
       ],
       colunas: [
         { header: "Ativo", width: 32 },
         { header: "Tipo", width: 16 },
         { header: "Local", width: 20 },
-        { header: "Pagamentos", align: "right" },
-        { header: "Total recebido", align: "right" },
+        { header: "Meses com renda", align: "right" },
+        { header: "Rendimento no ano", align: "right" },
       ],
       linhas: porAtivo.map((x) => [x.a.nome, TIPOS[x.a.tipo].nome, `${x.a.cidade}/${x.a.uf}`, x.n, brl(x.v)]),
-      totais: ["Total", "", "", pagos.length, brl(total)],
+      totais: ["Total", "", "", meses, brl(total)],
     };
   }
 
@@ -144,7 +143,6 @@ export function Reports({ assets, payments, investidor }: { assets: Asset[]; pay
 
   function docDistribuicao(): TableDoc {
     const total = assets.reduce((s, a) => s + a.valorInvestido, 0);
-    const renda12 = (id: string) => MESES_HISTORICO.slice(-12).reduce((s, m) => s + (nome(id).historico.find((h) => h.mes === m)?.valor ?? 0), 0);
     return {
       titulo: "Distribuição da carteira",
       subtitulo: `Posição em ${dataLonga(HOJE)}`,
@@ -159,8 +157,8 @@ export function Reports({ assets, payments, investidor }: { assets: Asset[]; pay
       ],
       linhas: [...assets]
         .sort((x, y) => y.valorInvestido - x.valorInvestido)
-        .map((a) => [a.nome, TIPOS[a.tipo].nome, brl(a.valorInvestido), pct((a.valorInvestido / total) * 100, { digits: 1 }), brl(renda12(a.id))]),
-      totais: ["Total", "", brl(total), "100,0%", brl(MESES_HISTORICO.slice(-12).reduce((s, m) => s + rendaMes(assets, m), 0))],
+        .map((a) => [a.nome, TIPOS[a.tipo].nome, brl(a.valorInvestido), pct((a.valorInvestido / total) * 100, { digits: 1 }), brl(desempenhoAtivo(a, ULTIMOS_12).renda)]),
+      totais: ["Total", "", brl(total), "100,0%", brl(ULTIMOS_12.reduce((s, m) => s + rendaMes(assets, m), 0))],
     };
   }
 
@@ -194,7 +192,7 @@ export function Reports({ assets, payments, investidor }: { assets: Asset[]; pay
     {
       key: "mensal",
       titulo: "Relatório mensal",
-      texto: "Rendimento de cada ativo no mês, percentual sobre o investido e situação do pagamento.",
+      texto: "Rendimento de cada ativo no mês e o percentual sobre o valor investido.",
       build: docMensal,
       controle: (
         <select aria-label="Mês do relatório" value={mes} onChange={(e) => setMes(e.target.value)} className={selectCls}>
@@ -205,7 +203,7 @@ export function Reports({ assets, payments, investidor }: { assets: Asset[]; pay
     {
       key: "anual",
       titulo: "Informe de rendimentos para o IR",
-      texto: "Tudo o que foi pago a você no ano-calendário, por ativo, e a posição em 31 de dezembro.",
+      texto: "Todo o rendimento do ano-calendário, por ativo, e a posição em 31 de dezembro.",
       build: docAnual,
       controle: (
         <select aria-label="Ano-calendário" value={ano} onChange={(e) => setAno(e.target.value)} className={selectCls}>
@@ -256,7 +254,7 @@ export function Reports({ assets, payments, investidor }: { assets: Asset[]; pay
                       disabled={!!busy}
                       className={`inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-pill px-4 text-sm font-semibold transition-[background-color,box-shadow,transform] duration-300 ease-out-expo hover:-translate-y-[1px] active:translate-y-0 disabled:opacity-60 sm:flex-none ${
                         f === "pdf"
-                          ? "bg-crp-blue text-ink shadow-[0_10px_26px_-12px_color-mix(in_srgb,var(--color-crp-blue)_75%,transparent)] hover:bg-crp-blue-hover"
+                          ? "bg-dono-blue text-on-accent shadow-[0_10px_26px_-12px_color-mix(in_srgb,var(--color-dono-blue)_75%,transparent)] hover:bg-dono-blue-hover"
                           : "bg-white/[0.08] text-ink outline-1 outline-offset-[-1px] outline-white/15 hover:bg-white/[0.14]"
                       }`}
                     >

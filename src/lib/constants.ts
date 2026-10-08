@@ -1,13 +1,18 @@
-import type { AssetStatus, AssetType, PaymentStatus } from "@/types";
+import type { AssetStatus, AssetType } from "@/types";
+import { mesesAte } from "./months";
 
 export const HOJE = "2026-09-13";
 export const ULTIMO_MES_FECHADO = "2026-08";
+
+/** Janela de histórico exibida na plataforma: 24 meses até o último fechamento. */
+export const MESES_HISTORICO: readonly string[] = mesesAte(ULTIMO_MES_FECHADO, 24);
+export const ULTIMOS_12: readonly string[] = MESES_HISTORICO.slice(-12);
 
 export const TIPOS: Record<AssetType, { nome: string; categoria: string; cor: string; imagem: string; foco: string; fundoClaro?: boolean; resumo: string }> = {
   charge: {
     nome: "CRP Charge",
     categoria: "Mobilidade elétrica",
-    cor: "#1C96A8",
+    cor: "#3FB9A4",
     imagem: "/assets/crp-charge.jpg",
     foco: "center",
     fundoClaro: true,
@@ -16,7 +21,7 @@ export const TIPOS: Record<AssetType, { nome: string; categoria: string; cor: st
   tank: {
     nome: "CRP Tank",
     categoria: "Infraestrutura",
-    cor: "#9B5EE8",
+    cor: "#8B6CC8",
     imagem: "/assets/crp-tank.jpg",
     foco: "center",
     resumo: "Infraestrutura e soluções para postos de combustível: modernização, estruturação e operações de abastecimento.",
@@ -24,7 +29,7 @@ export const TIPOS: Record<AssetType, { nome: string; categoria: string; cor: st
   capaxero: {
     nome: "Capaxero",
     categoria: "Serviços",
-    cor: "#D9538F",
+    cor: "#E0607E",
     imagem: "/assets/capaxero.jpg",
     foco: "center 20%",
     resumo: "Máquinas de higienização de capacetes como fonte de receita em locais com grande circulação de motociclistas.",
@@ -32,7 +37,7 @@ export const TIPOS: Record<AssetType, { nome: string; categoria: string; cor: st
   solar: {
     nome: "Usinas Solares",
     categoria: "Energia solar",
-    cor: "#C0851E",
+    cor: "#27AAE1",
     imagem: "/assets/usinas-solares.jpg",
     foco: "30% center",
     resumo: "Usinas solares de investimento: geração de energia e eficiência energética.",
@@ -47,9 +52,3 @@ export const STATUS_ATIVO: Record<AssetStatus, string> = {
   manutencao: "Em manutenção",
 };
 
-export const STATUS_PAGAMENTO: Record<PaymentStatus, string> = {
-  pago: "Pago",
-  processando: "Processando",
-  pendente: "Previsto",
-  atrasado: "Atrasado",
-};

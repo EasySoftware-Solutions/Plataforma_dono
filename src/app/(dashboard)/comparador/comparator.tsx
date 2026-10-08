@@ -3,27 +3,26 @@
 import { useMemo, useState } from "react";
 import { Check, Download, Loader2 } from "lucide-react";
 import type { Asset, MarketMonth } from "@/types";
-import { indiceBase100, metricas, resumo, retornosDono, retornosMercado, type SerieKey } from "@/lib/calc";
-import { MESES_HISTORICO } from "@/lib/mock-data";
+import { desempenhoAtivo, indiceBase100, MERCADO_KEYS, metricas, rendaAtivoMes, resumo, retornosDono, retornosMercado, type MercadoKey, type SerieKey } from "@/lib/calc";
 import { brl, mesLongo, mesNome, pct } from "@/lib/format";
 import { exportPdf } from "@/lib/exports";
+import { MESES_HISTORICO, ULTIMOS_12 } from "@/lib/constants";
 import { IndexLines } from "@/components/charts/index-lines";
 import { SERIES } from "@/lib/series";
 import { Segmented } from "@/components/ui/segmented";
 import { Delta, Panel } from "@/components/ui/panel";
 
 type Periodo = "3" | "6" | "12" | "24";
-const MERCADO: Exclude<SerieKey, "dono">[] = ["cdi", "selic", "poupanca", "ibovespa", "btc", "eth"];
+const MERCADO = MERCADO_KEYS;
 
 export function Comparator({ assets, market }: { assets: Asset[]; market: MarketMonth[] }) {
   const [periodo, setPeriodo] = useState<Periodo>("12");
-  const [ativos, setAtivos] = useState<Exclude<SerieKey, "dono">[]>(["cdi", "selic", "ibovespa", "btc", "eth"]);
+  const [ativos, setAtivos] = useState<MercadoKey[]>(["cdi", "selic", "itub4", "bbas3"]);
   const [valor, setValor] = useState(100000);
   const [busy, setBusy] = useState(false);
 
   const r = useMemo(() => resumo(assets), [assets]);
-  const doze12 = useMemo(() => MESES_HISTORICO.slice(-12), []);
-  const metricasDono12 = useMemo(() => metricas(retornosDono(assets, doze12)), [assets, doze12]);
+  const metricasDono12 = useMemo(() => metricas(retornosDono(assets, ULTIMOS_12)), [assets]);
   const meses = useMemo(() => MESES_HISTORICO.slice(-Number(periodo)), [periodo]);
   const series = useMemo<SerieKey[]>(() => ["dono", ...MERCADO.filter((m) => ativos.includes(m))], [ativos]);
   const rows = useMemo(() => indiceBase100(market, assets, meses), [market, assets, meses]);
@@ -40,8 +39,12 @@ export function Comparator({ assets, market }: { assets: Asset[]; market: Market
     [series, assets, market, meses, valor],
   );
   const dono = tabela.find((t) => t.s === "dono")!;
+  const porUsina = useMemo(
+    () => assets.map((a) => ({ a, mes: rendaAtivoMes(a, r.mes), ...desempenhoAtivo(a, ULTIMOS_12) })),
+    [assets, r.mes],
+  );
 
-  const toggle = (k: Exclude<SerieKey, "dono">) =>
+  const toggle = (k: MercadoKey) =>
     setAtivos((cur) => (cur.includes(k) ? cur.filter((c) => c !== k) : [...cur, k]));
 
   async function baixar() {
@@ -70,15 +73,10 @@ export function Comparator({ assets, market }: { assets: Asset[]; market: Market
   return (
     <div className="space-y-4">
       {/* Destaque inicial: Quanto está rendendo por mês a Carteira DONO */}
-      <section className="relative overflow-hidden rounded-card border border-white/[0.07] bg-gradient-to-br from-[#15204a] via-crp-surface to-[#070d26] p-5 shadow-[0_20px_44px_-28px_rgba(2,6,22,0.95)] sm:p-7">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex size-2 rounded-full bg-positive animate-pulse" />
-              <span className="text-xs font-bold uppercase tracking-wider text-crp-gold">
-                Rendimento Mensal · Carteira DONO
-              </span>
-            </div>
+      <section className="theme-dark relative overflow-hidden rounded-card border border-white/[0.07] bg-gradient-to-br from-[#15204a] via-dono-surface to-[#070d26] p-5 shadow-[0_20px_44px_-28px_rgba(2,6,22,0.95)] sm:p-7">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between xl:gap-10">
+          <div className="min-w-0 space-y-2">
+            <h2 className="text-sm font-semibold text-ink-subtle">Rendimento mensal da carteira DONO</h2>
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span className="num text-[34px] font-extrabold tracking-tight text-ink sm:text-[44px]">
                 {brl(r.rendaAtual)}
@@ -87,11 +85,20 @@ export function Comparator({ assets, market }: { assets: Asset[]; market: Market
               <Delta value={r.variacaoMes} />
             </div>
             <p className="max-w-[65ch] text-sm leading-relaxed text-ink-subtle">
-              Renda líquida distribuída em {mesNome(r.mes)} por {r.emOperacao} ativos reais em operação (carregadores CRP Charge, postos Tank, máquinas Capaxero e usinas solares).
+              Renda líquida de {mesNome(r.mes)}: sua participação de 1/3 no faturamento líquido de {r.emOperacao} {r.emOperacao === 1 ? "usina solar em operação" : "usinas solares em operação"}.
             </p>
+            <dl className="grid gap-x-6 gap-y-1.5 pt-3 text-sm sm:grid-cols-[auto_1fr_1fr]">
+              {porUsina.map((u) => (
+                <div key={u.a.id} className="contents">
+                  <dt className="font-semibold text-ink">{u.a.nome}</dt>
+                  <dd className="num text-ink-muted">{brl(u.mes)} em {mesNome(r.mes)}</dd>
+                  <dd className="num text-ink-subtle">{brl(u.renda)} em 12 meses, {pct(u.yieldMedio)} ao mês</dd>
+                </div>
+              ))}
+            </dl>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:gap-3.5">
+          <div className="grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 xl:w-[560px] xl:shrink-0">
             <div className="rounded-xl bg-white/[0.04] p-3.5 ring-1 ring-inset ring-white/[0.08]">
               <span className="block text-xs font-semibold text-ink-subtle">Rentabilidade média mensal</span>
               <span className="num mt-1 block text-lg font-bold text-ink sm:text-xl">{pct(r.yieldMedio)}</span>
@@ -99,12 +106,12 @@ export function Comparator({ assets, market }: { assets: Asset[]; market: Market
             </div>
             <div className="rounded-xl bg-white/[0.04] p-3.5 ring-1 ring-inset ring-white/[0.08]">
               <span className="block text-xs font-semibold text-ink-subtle">Últimos 12 meses</span>
-              <span className="num mt-1 block whitespace-nowrap text-lg font-bold text-ink sm:text-xl">{brl(r.acumulado12)}</span>
+              <span className="num mt-1 block text-lg font-bold text-ink sm:text-xl">{brl(r.acumulado12)}</span>
               <span className="mt-0.5 block text-[11px] text-ink-subtle">renda acumulada no período</span>
             </div>
             <div className="col-span-2 sm:col-span-1 rounded-xl bg-white/[0.04] p-3.5 ring-1 ring-inset ring-white/[0.08]">
               <span className="block text-xs font-semibold text-ink-subtle">Meses negativos</span>
-              <span className={`num mt-1 block whitespace-nowrap text-lg font-bold sm:text-xl ${metricasDono12.mesesNegativos > 0 ? "text-negative" : "text-positive"}`}>
+              <span className={`num mt-1 block text-lg font-bold sm:text-xl ${metricasDono12.mesesNegativos > 0 ? "text-negative" : "text-positive"}`}>
                 {metricasDono12.mesesNegativos} {metricasDono12.mesesNegativos === 1 ? "mês" : "meses"}
               </span>
               <span className="mt-0.5 block text-[11px] text-ink-subtle">estabilidade do fluxo real</span>
@@ -237,7 +244,7 @@ export function Comparator({ assets, market }: { assets: Asset[]; market: Market
 
         <Panel title="Simulação em reais">
           <label htmlFor="valor-sim" className="text-sm text-ink-subtle">Valor aplicado no início do período</label>
-          <div className="mt-2 flex h-12 items-center rounded-xl bg-white/[0.06] px-4 ring-1 ring-inset ring-white/10 focus-within:ring-2 focus-within:ring-crp-blue-bright">
+          <div className="mt-2 flex h-12 items-center rounded-xl bg-white/[0.06] px-4 ring-1 ring-inset ring-white/10 focus-within:ring-2 focus-within:ring-dono-blue-bright">
             <span className="text-ink-subtle">R$</span>
             <input
               id="valor-sim"
@@ -272,7 +279,7 @@ export function Comparator({ assets, market }: { assets: Asset[]; market: Market
         <h2 className="mb-2 font-semibold text-ink-muted">Como este comparativo é calculado</h2>
         <p className="max-w-[90ch]">
           A rentabilidade da carteira DONO é o rendimento distribuído em cada mês dividido pelo capital dos ativos em operação, com reinvestimento para comparação. Esses valores são de demonstração.
-          CDI, Taxa Selic e poupança vêm do Banco Central do Brasil (séries 4391, 4390 e 195); o Ibovespa utiliza o fechamento mensal da B3; Bitcoin (BTC) e Ethereum (ETH) refletem a variação mensal de fechamento em reais (BRL). Rentabilidades brutas, sem impostos e taxas.
+          O CDI e a poupança vêm do Banco Central do Brasil (séries 4391 e 195). O Tesouro Selic é o retorno mensal do preço unitário do título com vencimento em 2027, publicado pelo Tesouro Transparente, e inclui a marcação a mercado. As ações do Itaú e do Banco do Brasil usam o fechamento mensal ajustado por dividendos e juros sobre capital, ou seja, o retorno total de quem manteve a ação. Todas as séries são brutas, sem impostos e taxas. Para atualizar, rode npm run market:update.
           Rentabilidade passada não garante rentabilidade futura.
         </p>
       </section>

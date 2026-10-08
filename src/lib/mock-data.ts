@@ -1,58 +1,70 @@
-// TODO(dados reais): todo o conteúdo deste arquivo é DEMONSTRAÇÃO.
-// Posições, valores investidos, yields, rendimentos e pagamentos são fictícios
-// e precisam ser substituídos pelos dados reais antes de qualquer publicação.
-import type { Asset, AssetType, BankAccount, Investor, MonthlyIncome, Notice, Payment } from "@/types";
-import { HOJE, ULTIMO_MES_FECHADO } from "./constants";
+// DADOS MOCKADOS DO CLIENTE MAGNO, USINAS NB1 E NB2.
+//
+// Origem dos números (planilha Consolidado_NB1_e_NB2_2026.xlsx):
+//  - "Demonstrativo 2025-2026": líquido geral mensal de cada usina, mar/2025 a mar/2026.
+//    A planilha não traz abr e mai de 2025; esses meses ficam sem renda.
+//  - "NB1/NB2 - Relatórios 2026": faturamento real líquido de jun a ago/2026. Setembro de NB1
+//    existe só parcial e NB2 ainda não tem relatório, então o último mês fechado é agosto.
+//    Para NB2/junho vale a versão definitiva (2ª janela), não a preliminar.
+//  - A aba "Histórico 2026 (Gráficos)" não é usada: as séries de geração estão deslocadas
+//    um mês em relação aos relatórios.
+//
+// O QUE É MOCK (não vem da planilha, trocar pelos dados reais do contrato):
+//  - FRACAO_CLIENTE: o demonstrativo mostra a "fração 1/3" dos sócios; assumimos que Magno detém 1/3.
+//  - valorInvestido de cada usina, datas de aquisição, cidade/UF e coordenadas.
+//  - Documentos e avisos.
+import type { Asset, Investor, MonthlyIncome, Notice } from "@/types";
+import { MESES_HISTORICO, ULTIMO_MES_FECHADO } from "./constants";
 
-export const MESES_HISTORICO: string[] = (() => {
-  const out: string[] = [];
-  let y = 2024;
-  let m = 9;
-  while (out.length < 24) {
-    out.push(`${y}-${String(m).padStart(2, "0")}`);
-    if (++m > 12) {
-      m = 1;
-      y++;
-    }
-  }
-  return out;
-})();
+export const FRACAO_CLIENTE = 1 / 3;
 
-export const addMonths = (mes: string, n: number) => {
-  const [y, m] = mes.split("-").map(Number);
-  const t = y * 12 + (m - 1) + n;
-  return `${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, "0")}`;
+
+const round = (v: number) => Math.round(v * 100) / 100;
+
+/** Faturamento real líquido da usina inteira (R$), antes da fração do cliente. */
+const LIQUIDO_NB1: Record<string, number> = {
+  "2025-03": 4655.49,
+  "2025-06": 5597.27,
+  "2025-07": 5253.23,
+  "2025-08": 6001.35,
+  "2025-09": 9926.79,
+  "2025-10": 5203.54,
+  "2025-11": 8288.79,
+  "2025-12": 5670.42,
+  "2026-01": 5659.64,
+  "2026-02": 5936.41,
+  "2026-03": 3688.2,
+  "2026-06": 5830.16,
+  "2026-07": 4933.77,
+  "2026-08": 5358.04,
 };
 
-const monthsBetween = (a: string, b: string) => {
-  const [ya, ma] = a.split("-").map(Number);
-  const [yb, mb] = b.split("-").map(Number);
-  return yb * 12 + mb - (ya * 12 + ma);
+const LIQUIDO_NB2: Record<string, number> = {
+  "2025-03": 4831.19,
+  "2025-06": 5397.44,
+  "2025-07": 4748.98,
+  "2025-08": 6440.08,
+  "2025-09": 6481.82,
+  "2025-10": 4568.65,
+  "2025-11": 6915.43,
+  "2025-12": 6568.5,
+  "2026-01": 6499.42,
+  "2026-02": 5492.43,
+  "2026-03": 3920.62,
+  "2026-06": 4409.93,
+  "2026-07": 5382.25,
+  "2026-08": 6236.11,
 };
-
-function rng(seed: number) {
-  return () => {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-const SAZONAL_SOLAR = [1.12, 1.1, 1.05, 0.97, 0.9, 0.86, 0.88, 0.93, 1.0, 1.06, 1.1, 1.13];
 
 interface Seed {
   id: string;
-  tipo: AssetType;
   nome: string;
   cidade: string;
   uf: string;
   dataAquisicao: string;
   inicioOperacao: string;
   valorInvestido: number;
-  yieldReferencia: number;
-  manutencao?: string[];
+  liquido: Record<string, number>;
   descricao: string;
   especificacoes: { rotulo: string; valor: string }[];
   coordenadas: { lat: number; lng: number };
@@ -60,263 +72,112 @@ interface Seed {
 
 const SEEDS: Seed[] = [
   {
-    id: "charge-campinas",
-    tipo: "charge",
-    nome: "Eletroposto Anhanguera",
-    cidade: "Campinas",
-    uf: "SP",
-    dataAquisicao: "2024-07-18",
-    inicioOperacao: "2024-09",
-    valorInvestido: 180000,
-    yieldReferencia: 1.45,
-    descricao: "Estação de recarga rápida à beira de rodovia, com operação e manutenção feitas pela CRP Charge.",
-    especificacoes: [
-      { rotulo: "Carregadores", valor: "2 DC de 60 kW e 4 AC de 22 kW" },
-      { rotulo: "Operação", valor: "24 horas, 7 dias" },
-      { rotulo: "Modelo de receita", valor: "Tarifa por kWh recarregado" },
-    ],
-    coordenadas: { lat: -22.9056, lng: -47.0608 },
-  },
-  {
-    id: "charge-sp",
-    tipo: "charge",
-    nome: "Hub de Recarga Zona Sul",
-    cidade: "São Paulo",
-    uf: "SP",
-    dataAquisicao: "2025-02-11",
-    inicioOperacao: "2025-04",
-    valorInvestido: 120000,
-    yieldReferencia: 1.38,
-    descricao: "Hub urbano de recarga em estacionamento de alto giro, com ocupação crescente desde a inauguração.",
-    especificacoes: [
-      { rotulo: "Carregadores", valor: "1 DC de 40 kW e 6 AC de 11 kW" },
-      { rotulo: "Operação", valor: "6h às 24h" },
-      { rotulo: "Modelo de receita", valor: "Tarifa por kWh e por tempo de vaga" },
-    ],
-    coordenadas: { lat: -23.6509, lng: -46.6951 },
-  },
-  {
-    id: "tank-sorocaba",
-    tipo: "tank",
-    nome: "Posto Serra Azul",
-    cidade: "Sorocaba",
-    uf: "SP",
-    dataAquisicao: "2024-07-30",
-    inicioOperacao: "2024-09",
-    valorInvestido: 250000,
-    yieldReferencia: 1.22,
-    descricao: "Modernização completa da infraestrutura de abastecimento, remunerada por participação no volume vendido.",
-    especificacoes: [
-      { rotulo: "Escopo", valor: "6 bombas, tanques e automação" },
-      { rotulo: "Volume de referência", valor: "420 mil litros por mês" },
-      { rotulo: "Modelo de receita", valor: "Participação por litro" },
-    ],
-    coordenadas: { lat: -23.5015, lng: -47.4526 },
-  },
-  {
-    id: "capaxero-bh",
-    tipo: "capaxero",
-    nome: "Rede Capaxero Centro",
-    cidade: "Belo Horizonte",
-    uf: "MG",
-    dataAquisicao: "2024-12-05",
-    inicioOperacao: "2025-01",
-    valorInvestido: 45000,
-    yieldReferencia: 1.7,
-    manutencao: ["2026-07", "2026-08"],
-    descricao: "Rede de máquinas de higienização de capacetes em estacionamentos e pontos de entrega por moto.",
-    especificacoes: [
-      { rotulo: "Máquinas", valor: "10 unidades" },
-      { rotulo: "Pontos", valor: "Estacionamentos e hubs de entrega" },
-      { rotulo: "Modelo de receita", valor: "Valor por higienização" },
-    ],
-    coordenadas: { lat: -19.9167, lng: -43.9345 },
-  },
-  {
-    id: "capaxero-curitiba",
-    tipo: "capaxero",
-    nome: "Rede Capaxero Terminais",
-    cidade: "Curitiba",
-    uf: "PR",
-    dataAquisicao: "2025-09-22",
-    inicioOperacao: "2025-10",
-    valorInvestido: 36000,
-    yieldReferencia: 1.65,
-    descricao: "Máquinas instaladas em terminais e bolsões de estacionamento de motos.",
-    especificacoes: [
-      { rotulo: "Máquinas", valor: "8 unidades" },
-      { rotulo: "Pontos", valor: "Terminais e bolsões de motos" },
-      { rotulo: "Modelo de receita", valor: "Valor por higienização" },
-    ],
-    coordenadas: { lat: -25.4284, lng: -49.2733 },
-  },
-  {
-    id: "solar-montes-claros",
-    tipo: "solar",
-    nome: "Usina Solar Montes Claros I",
+    id: "nb1",
+    nome: "Usina NB1",
     cidade: "Montes Claros",
     uf: "MG",
-    dataAquisicao: "2024-06-14",
-    inicioOperacao: "2024-09",
-    valorInvestido: 320000,
-    yieldReferencia: 1.3,
-    descricao: "Usina de solo com energia injetada na rede e créditos vendidos a consumidores comerciais.",
+    dataAquisicao: "2025-02-20",
+    inicioOperacao: "2025-03",
+    valorInvestido: 140000,
+    liquido: LIQUIDO_NB1,
+    descricao: "Usina solar de geração distribuída. A energia gerada é compensada na unidade consumidora do beneficiário principal e o faturamento é liquidado todo mês na primeira janela.",
     especificacoes: [
-      { rotulo: "Potência instalada", valor: "1,2 MWp" },
-      { rotulo: "Geração média", valor: "160 MWh por mês" },
+      { rotulo: "Beneficiário principal", valor: "GREENLIFE (UC 6114876)" },
+      { rotulo: "Janela de faturamento", valor: "1ª janela, por volta do dia 15" },
+      { rotulo: "Geração de jun a ago/2026", valor: "25.158 kWh" },
+      { rotulo: "Tarifa média de compensação", valor: "R$ 0,68 por kWh" },
+      { rotulo: "Margem líquida média", valor: "80,1% do faturamento bruto" },
+      { rotulo: "Sua participação", valor: "1/3 do líquido da usina" },
       { rotulo: "Modelo de receita", valor: "Venda de créditos de energia" },
     ],
     coordenadas: { lat: -16.7282, lng: -43.8578 },
   },
   {
-    id: "solar-petrolina",
-    tipo: "solar",
-    nome: "Usina Solar Petrolina II",
-    cidade: "Petrolina",
-    uf: "PE",
-    dataAquisicao: "2026-06-03",
-    inicioOperacao: "2026-11",
-    valorInvestido: 280000,
-    yieldReferencia: 1.35,
-    descricao: "Usina em construção, com conexão à rede prevista para novembro de 2026.",
+    id: "nb2",
+    nome: "Usina NB2",
+    cidade: "Janaúba",
+    uf: "MG",
+    dataAquisicao: "2025-02-20",
+    inicioOperacao: "2025-03",
+    valorInvestido: 130000,
+    liquido: LIQUIDO_NB2,
+    descricao: "Usina solar de geração distribuída. O faturamento é liquidado na segunda janela de cada mês. O relatório preliminar de junho foi refeito nessa janela e vale o valor definitivo.",
     especificacoes: [
-      { rotulo: "Potência prevista", valor: "1,0 MWp" },
-      { rotulo: "Conexão prevista", valor: "Novembro de 2026" },
+      { rotulo: "Beneficiário principal", valor: "ESTRELARIO (UC 59067561)" },
+      { rotulo: "Janela de faturamento", valor: "2ª janela, por volta do dia 30" },
+      { rotulo: "Geração de jun a ago/2026", valor: "27.257 kWh" },
+      { rotulo: "Tarifa média de compensação", valor: "R$ 0,66 por kWh" },
+      { rotulo: "Margem líquida média", valor: "80,6% do faturamento bruto" },
+      { rotulo: "Sua participação", valor: "1/3 do líquido da usina" },
       { rotulo: "Modelo de receita", valor: "Venda de créditos de energia" },
     ],
-    coordenadas: { lat: -9.3891, lng: -40.5027 },
+    coordenadas: { lat: -15.8029, lng: -43.3094 },
   },
 ];
 
-function fator(s: Seed, mes: string, r: () => number) {
-  const idade = monthsBetween(s.inicioOperacao, mes);
-  const ruido = 0.96 + r() * 0.08;
-  switch (s.tipo) {
-    case "solar":
-      return SAZONAL_SOLAR[Number(mes.split("-")[1]) - 1] * ruido;
-    case "charge":
-      return Math.min(1, 0.62 + idade * 0.065) * (1 + idade * 0.004) * ruido;
-    case "capaxero":
-      return (s.manutencao?.includes(mes) ? 0.35 : Math.min(1, 0.7 + idade * 0.08)) * ruido;
-    default:
-      return (0.98 + r() * 0.04) * ruido;
-  }
+function historico(s: Seed): MonthlyIncome[] {
+  return MESES_HISTORICO.map((mes) => ({ mes, valor: round((s.liquido[mes] ?? 0) * FRACAO_CLIENTE) }));
 }
 
-const round = (v: number) => Math.round(v * 100) / 100;
-
-function historico(s: Seed, seed: number): MonthlyIncome[] {
-  const r = rng(seed);
-  return MESES_HISTORICO.map((mes) => ({
-    mes,
-    valor:
-      monthsBetween(s.inicioOperacao, mes) < 0
-        ? 0
-        : round(((s.valorInvestido * s.yieldReferencia) / 100) * fator(s, mes, r)),
-  }));
+/** Rentabilidade mensal de referência: média da parcela do cliente sobre o capital, nos meses com renda. */
+function yieldReferencia(s: Seed, hist: MonthlyIncome[]) {
+  const com = hist.filter((h) => h.valor > 0);
+  const media = com.reduce((a, h) => a + h.valor, 0) / (com.length || 1);
+  return round((media / s.valorInvestido) * 100);
 }
 
-function status(s: Seed): Asset["status"] {
-  if (s.inicioOperacao > ULTIMO_MES_FECHADO) return "implantacao";
-  if (s.manutencao?.includes(ULTIMO_MES_FECHADO)) return "manutencao";
-  return "ativo";
-}
+export const ASSETS: Asset[] = SEEDS.map((s) => {
+  const hist = historico(s);
+  return {
+    id: s.id,
+    tipo: "solar",
+    nome: s.nome,
+    cidade: s.cidade,
+    uf: s.uf,
+    status: s.inicioOperacao > ULTIMO_MES_FECHADO ? "implantacao" : "ativo",
+    dataAquisicao: s.dataAquisicao,
+    inicioOperacao: s.inicioOperacao,
+    valorInvestido: s.valorInvestido,
+    yieldReferencia: yieldReferencia(s, hist),
+    descricao: s.descricao,
+    especificacoes: s.especificacoes,
+    coordenadas: s.coordenadas,
+    historico: hist,
+    documentos: [
+      { id: `${s.id}-contrato`, titulo: "Contrato de participação", tipo: "Contrato", data: s.dataAquisicao },
+      { id: `${s.id}-laudo`, titulo: "Laudo técnico de instalação", tipo: "Laudo", data: s.dataAquisicao },
+      { id: `${s.id}-seguro`, titulo: "Apólice de seguro patrimonial", tipo: "Seguro", data: s.dataAquisicao },
+    ],
+  };
+});
 
-export const ASSETS: Asset[] = SEEDS.map((s, i) => ({
-  id: s.id,
-  tipo: s.tipo,
-  nome: s.nome,
-  cidade: s.cidade,
-  uf: s.uf,
-  status: status(s),
-  dataAquisicao: s.dataAquisicao,
-  inicioOperacao: s.inicioOperacao,
-  valorInvestido: s.valorInvestido,
-  yieldReferencia: s.yieldReferencia,
-  descricao: s.descricao,
-  especificacoes: s.especificacoes,
-  coordenadas: s.coordenadas,
-  historico: historico(s, 1000 + i * 97),
-  documentos: [
-    { id: `${s.id}-contrato`, titulo: "Contrato de aquisição", tipo: "Contrato", data: s.dataAquisicao },
-    { id: `${s.id}-laudo`, titulo: "Laudo técnico de instalação", tipo: "Laudo", data: s.dataAquisicao },
-    { id: `${s.id}-seguro`, titulo: "Apólice de seguro patrimonial", tipo: "Seguro", data: s.dataAquisicao },
-  ],
-}));
 
-function payments(): Payment[] {
-  const out: Payment[] = [];
-  for (const a of ASSETS) {
-    for (const h of a.historico) {
-      if (h.valor <= 0) continue;
-      const dataPg = `${addMonths(h.mes, 1)}-10`;
-      let st: Payment["status"] = dataPg <= HOJE ? "pago" : "pendente";
-      if (h.mes === ULTIMO_MES_FECHADO && a.id === "capaxero-bh") st = "atrasado";
-      if (h.mes === ULTIMO_MES_FECHADO && a.id === "solar-montes-claros") st = "processando";
-      out.push({ id: `${a.id}-${h.mes}`, assetId: a.id, competencia: h.mes, data: dataPg, valor: h.valor, status: st });
-    }
-    for (let k = 1; k <= 3; k++) {
-      const mes = addMonths(ULTIMO_MES_FECHADO, k);
-      if (mes < a.inicioOperacao) continue;
-      const sazonal = a.tipo === "solar" ? SAZONAL_SOLAR[Number(mes.split("-")[1]) - 1] : 1;
-      const manut = a.status === "manutencao" && k === 1 ? 0.6 : 1;
-      out.push({
-        id: `${a.id}-${mes}`,
-        assetId: a.id,
-        competencia: mes,
-        data: `${addMonths(mes, 1)}-10`,
-        valor: round(((a.valorInvestido * a.yieldReferencia) / 100) * sazonal * manut),
-        status: "pendente",
-        previsto: true,
-      });
-    }
-  }
-  return out.sort((x, y) => (x.data === y.data ? y.valor - x.valor : y.data.localeCompare(x.data)));
-}
+export const DEMO_INVESTOR: Investor = { nome: "Magno", email: "magno@exemplo.com.br" };
 
-export const PAYMENTS: Payment[] = payments();
-
-export const DEMO_INVESTOR: Investor = { nome: "Ricardo Almeida", email: "ricardo@exemplo.com.br" };
-
-export const DEMO_BANK: BankAccount = {
-  banco: "341 · Itaú Unibanco",
-  agencia: "0472",
-  conta: "31845-2",
-  titular: "Ricardo Almeida",
-  pix: "ricardo@exemplo.com.br",
-};
 
 export const NOTICES: Notice[] = [
   {
-    id: "n1",
-    tipo: "pagamento",
-    titulo: "Pagamento de agosto em andamento",
-    detalhe: "4 repasses pagos, 1 em processamento e 1 atrasado.",
-    data: "2026-09-10",
-    href: "/pagamentos",
-  },
-  {
     id: "n2",
-    tipo: "ativo",
-    titulo: "Rede Capaxero Centro em manutenção",
-    detalhe: "Troca preventiva de módulos. O repasse de agosto está atrasado.",
-    data: "2026-09-08",
-    href: "/ativos/capaxero-bh",
-  },
-  {
-    id: "n3",
     tipo: "relatorio",
     titulo: "Relatório de agosto disponível",
-    detalhe: "Rendimentos, pagamentos e desempenho por ativo.",
+    detalhe: "Geração, compensação, custos e faturamento líquido de cada usina.",
     data: "2026-09-05",
     href: "/relatorios",
   },
   {
+    id: "n3",
+    tipo: "ativo",
+    titulo: "NB1: setembro em andamento",
+    detalhe: "O relatório parcial já mostra 2.835 kWh gerados. O fechamento do mês sai no próximo ciclo.",
+    data: "2026-09-12",
+    href: "/ativos/nb1",
+  },
+  {
     id: "n4",
     tipo: "ativo",
-    titulo: "Petrolina II: obra em andamento",
-    detalhe: "Conexão à rede prevista para novembro de 2026.",
+    titulo: "NB2: junho refeito na 2ª janela",
+    detalhe: "O valor preliminar foi substituído pelo definitivo. Seus relatórios já usam o valor correto.",
     data: "2026-08-28",
-    href: "/ativos/solar-petrolina",
+    href: "/ativos/nb2",
   },
 ];

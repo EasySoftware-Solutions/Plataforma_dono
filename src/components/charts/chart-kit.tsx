@@ -2,13 +2,15 @@
 
 import { Table2, BarChart3 } from "lucide-react";
 import type { ReactNode } from "react";
+import { m } from "motion/react";
+import { DURATION, EASE_OUT } from "@/components/motion/tokens";
 
-export const AXIS = { stroke: "transparent", tick: { fill: "#8e9ac2", fontSize: 12 }, tickLine: false, axisLine: false } as const;
-export const GRID = "rgba(144,155,195,0.14)";
+export const AXIS = { stroke: "transparent", tick: { fill: "var(--chart-axis)", fontSize: 12 }, tickLine: false, axisLine: false } as const;
+export const GRID = "var(--chart-grid)";
 
 export function TooltipBox({ title, rows, footer }: { title: string; rows: { label: string; value: string; color?: string; strong?: boolean }[]; footer?: ReactNode }) {
   return (
-    <div className="min-w-[200px] rounded-xl bg-crp-surface-2 px-3.5 py-3 text-sm shadow-[0_16px_40px_-12px_rgba(2,6,22,0.85)] ring-1 ring-white/10">
+    <div className="min-w-[200px] rounded-xl bg-dono-surface-2 px-3.5 py-3 text-sm shadow-[0_16px_40px_-12px_rgba(11,18,48,0.4)] ring-1 ring-white/10">
       <p className="mb-2 font-semibold text-ink">{title}</p>
       <ul className="space-y-1.5">
         {rows.map((r) => (
@@ -48,7 +50,7 @@ export function ViewToggle({ table, onChange }: { table: boolean; onChange: (t: 
     <button
       type="button"
       onClick={() => onChange(!table)}
-      className="inline-flex h-8 items-center gap-1.5 rounded-pill px-3 text-sm font-semibold text-ink-subtle transition-colors hover:bg-white/[0.08] hover:text-ink"
+      className="inline-flex h-11 items-center gap-1.5 rounded-pill px-3 text-sm font-semibold text-ink-subtle transition-colors duration-150 hover:bg-white/[0.08] hover:text-ink sm:h-8 [@media(pointer:coarse)]:h-11"
     >
       {table ? <BarChart3 aria-hidden className="size-4" /> : <Table2 aria-hidden className="size-4" />}
       {table ? "Ver gráfico" : "Ver tabela"}
@@ -78,7 +80,7 @@ export function DataTableView({ head, rows }: { head: string[]; rows: (string | 
       {/* Tablet/desktop: tabela */}
       <div className="hidden max-h-[320px] overflow-auto rounded-xl sm:block">
         <table className="w-full min-w-[520px] text-sm">
-          <thead className="sticky top-0 bg-crp-surface">
+          <thead className="sticky top-0 bg-dono-surface">
             <tr>
               {head.map((h, i) => (
                 <th key={h} className={`px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-ink-subtle ${i ? "text-right" : "text-left"}`}>
@@ -101,5 +103,15 @@ export function DataTableView({ head, rows }: { head: string[]; rows: (string | 
         </table>
       </div>
     </>
+  );
+}
+
+// Troca gráfico <-> tabela no mesmo lugar: fade de entrada curto. A saída é instantânea
+// de propósito, para a troca ser interrompível e nunca deixar dois conteúdos empilhados.
+export function Swap({ id, children }: { id: string; children: ReactNode }) {
+  return (
+    <m.div key={id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: DURATION.swap, ease: EASE_OUT }}>
+      {children}
+    </m.div>
   );
 }
